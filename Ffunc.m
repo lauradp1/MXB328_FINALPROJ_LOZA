@@ -37,5 +37,6 @@ for ii = 1:Nx
         end
     end
 end
+%hello 
 
 
