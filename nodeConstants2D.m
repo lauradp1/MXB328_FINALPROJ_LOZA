@@ -3,31 +3,32 @@ function [K,k,psi,Q,delta,Delta,DV,quadMats] = nodeConstants2D(materials,constan
 %provide fast access while iterating over time
 % Inputs:
 %   materials: structure containing 2 by 2 by n arrays with each matrix
-%               consisting of the x limits (1,:) and z limits (2,:) of the
-%               2D material for n 2D boxes of the material
+%              consisting of the x limits (1,:) and z limits (2,:) of the
+%              2D material for n 2D boxes of the material
 %   constants: structure with keys for each constant where each key maps to
-%               a vector of length the number of materials containing the
-%               different values of the constant for each material
+%              a vector of length the number of materials containing the
+%              different values of the constant for each material
 %   xNodes: vector of x-values corresponding to the x-nodes
 %   zNodes: vector of z-values corresponding to the z-nodes
 % Outputs:
 %   K: Nx by Nz by 4 array containing the Kxx and Kzz approximations for
-%       each node
+%      each node
 %   k: function handle vector of length no. of materials with h as input
-%       and outputs the value of k for each material in same order as the
-%       keys/names of the materials
+%      and outputs the value of k for each material in same order as the
+%      keys/names of the materials
 %   psi: function handle vector of length no. of materials with h as input
-%           and outputs the value of psi for each material in same order as
-%           the keys/names of the materials
-%   Q: function handle
+%        and outputs the value of psi for each material in same order as
+%        the keys/names of the materials
+%   Q: function handle with x and z as input and outputs evapotranspiration
+%      term at the given x and z position
 %   delta: Nx by Nz by 2 by 2 array containing distances from each node to
-%           the surrounding nodes
+%          the surrounding nodes
 %   Delta: Nx by Nz by 2 array containing the length and height of each
-%           node domain Vp
+%          node domain Vp
 %   DV: Nx by Nz by 4 array containing areas of the 4 quadrants surrounding
 %       each node
 %   quadMats: Nx by Nz by 4 array containing the materials of the quadrants
-%               surrounding each node
+%             surrounding each node
 
 % Define readability constants
 east = 1; west = 2; north = 3; south = 4;
@@ -113,6 +114,7 @@ for i = 1:Nx
         end
         
         % Compute the Kxx (East,West) and Kzz (North,South) approximations
+        % THIS MAY BE WRONG SHOULD DOUBLE CHECK VALUES ARE WHAT WE WANT
         K(i,j,east) = (nodeMats(1,4)*delta(i,j,south) + ...
             nodeMats(1,1)*delta(i,j,north)) / (2*Delta(i,j,2));
         K(i,j,west) = (nodeMats(1,3)*delta(i,j,south) + ...
