@@ -71,7 +71,6 @@ nodes.zNodes = zNodes;
 
 % Collate discretisation constants
 discretisationConsts.dt = 1; % should replace this with = dt; and define dt at top with t
-discretisationConsts.sigma = [];
 discretisationConsts.theta = [];
 discretisationConsts.Kc = [];
 discretisationConsts.Hc = [];

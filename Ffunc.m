@@ -30,7 +30,6 @@ function F = Ffunc(h,h_n,k,psi,Q_p,q_rain,nodes,meshConfig,discretisationConsts)
 %   discretisationConsts: structure containing constants relating to the
 %                         discretisation of Richard's PDE:
 %           - dt: value of one time-step
-%           - sigma: 
 %           - theta: 
 %           - Kc: hydraulic conductivity of the creek
 %           - Hc: total head of the creek
@@ -48,7 +47,6 @@ K = meshConfig.K;
 
 % Extract discretisation constants
 dt = discretisationConsts.dt;
-sigma = discretisationConsts.sigma;
 theta = discretisationConsts.theta;
 Kc = discretisationConsts.Kc;
 Hc = discretisationConsts.Hc;
@@ -79,15 +77,27 @@ for ii = 1:Nx
         
         % USE h TO GENERATE Psi, G and Q ----------------------------------
         
-        % Generate flux values for each face of node control volume
-        q_east = ( (1-sigma)*k_h(h(ii,jj))+ sigma*k_h(h(ii+1,jj)) ) * ...
-            ( K(ii,jj,east)*(H(h(ii+1,jj)) - H(h(ii,jj)))/delta(ii,jj,east) );
-        q_west = ( (1-sigma)*k_h(h(ii-1,jj))+ sigma*k_h(h(ii,jj)) ) * ...
-            ( K(ii,jj,west)*(H(h(ii,jj)) - H(h(ii-1,jj)))/delta(ii,jj,west) );
-        q_north = ( (1-sigma)*k_h(h(ii,jj))+ sigma*k_h(h(ii,jj+1)) ) * ...
-            ( K(ii,jj,north)*(H(h(ii,jj+1)) - H(h(ii,jj)))/delta(ii,jj,north) );
-        q_south = ( (1-sigma)*k_h(h(ii,jj-1))+ sigma*k_h(h(ii,jj)) ) * ...
-            ( K(ii,jj,south)*(H(h(ii,jj)) - H(h(ii,jj-1)))/delta(ii,jj,south) );
+        % Generate flux values for each face of interior nodes control volumes
+        if ii < Nx
+            sigma_e = (h(ii,jj)<h(ii+1,jj)) + (1/2)*(h(ii,jj)==h(ii+1,jj));
+            q_east = ( (1-sigma_e)*k_h(h(ii,jj)) + sigma_e*k_h(h(ii+1,jj)) ) * ...
+                ( K(ii,jj,east)*(H(h(ii+1,jj)) - H(h(ii,jj)))/delta(ii,jj,east) );
+        end
+        if ii > 1
+            sigma_w = (h(ii,jj)>h(ii-1,jj)) + (1/2)*(h(ii,jj)==h(ii-1,jj));
+            q_west = ( (1-sigma_w)*k_h(h(ii-1,jj)) + sigma_w*k_h(h(ii,jj)) ) * ...
+                ( K(ii,jj,west)*(H(h(ii,jj)) - H(h(ii-1,jj)))/delta(ii,jj,west) );
+        end
+        if jj < Nz
+            sigma_n = (h(ii,jj)<h(ii,jj+1)) + (1/2)*(h(ii,jj)==h(ii,jj+1));
+            q_north = ( (1-sigma_n)*k_h(h(ii,jj)) + sigma_n*k_h(h(ii,jj+1)) ) * ...
+                ( K(ii,jj,north)*(H(h(ii,jj+1)) - H(h(ii,jj)))/delta(ii,jj,north) );
+        end
+        if jj > 1
+            sigma_s = (h(ii,jj)>h(ii,jj-1)) + (1/2)*(h(ii,jj)==h(ii,jj-1));
+            q_south = ( (1-sigma_s)*k_h(h(ii,jj-1)) + sigma_s*k_h(h(ii,jj)) ) * ...
+                ( K(ii,jj,south)*(H(h(ii,jj)) - H(h(ii,jj-1)))/delta(ii,jj,south) );
+        end
         
         % Apply boundary conditions
         q_east = (ii < Nx)*q_east;
@@ -108,14 +118,22 @@ for ii = 1:Nx
         % USE h_n TO GENERATE Psi_n, G_n and Q_n --------------------------
         
         % Generate flux values for each face of node control volume
-        q_east = ( (1-sigma)*k_h(h_n(ii,jj))+ sigma*k_h(h_n(ii+1,jj)) ) * ...
-            ( K(ii,jj,east)*(H(h_n(ii+1,jj)) - H(h_n(ii,jj)))/delta(ii,jj,east) );
-        q_west = ( (1-sigma)*k_h(h_n(ii-1,jj))+ sigma*k_h(h_n(ii,jj)) ) * ...
-            ( K(ii,jj,west)*(H(h_n(ii,jj)) - H(h_n(ii-1,jj)))/delta(ii,jj,west) );
-        q_north = ( (1-sigma)*k_h(h_n(ii,jj))+ sigma*k_h(h_n(ii,jj+1)) ) * ...
-            ( K(ii,jj,north)*(H(h_n(ii,jj+1)) - H(h_n(ii,jj)))/delta(ii,jj,north) );
-        q_south = ( (1-sigma)*k_h(h_n(ii,jj-1))+ sigma*k_h(h_n(ii,jj)) ) * ...
-            ( K(ii,jj,south)*(H(h_n(ii,jj)) - H(h_n(ii,jj-1)))/delta(ii,jj,south) );
+        if ii < Nx
+            q_east = ( (1-sigma_e)*k_h(h_n(ii,jj)) + sigma_e*k_h(h_n(ii+1,jj)) ) * ...
+                ( K(ii,jj,east)*(H(h_n(ii+1,jj)) - H(h_n(ii,jj)))/delta(ii,jj,east) );
+        end
+        if ii > 1
+            q_west = ( (1-sigma_w)*k_h(h_n(ii-1,jj)) + sigma_w*k_h(h_n(ii,jj)) ) * ...
+                ( K(ii,jj,west)*(H(h_n(ii,jj)) - H(h_n(ii-1,jj)))/delta(ii,jj,west) );
+        end
+        if jj < Nz
+            q_north = ( (1-sigma_n)*k_h(h_n(ii,jj)) + sigma_n*k_h(h_n(ii,jj+1)) ) * ...
+                ( K(ii,jj,north)*(H(h_n(ii,jj+1)) - H(h_n(ii,jj)))/delta(ii,jj,north) );
+        end
+        if jj > 1
+            q_south = ( (1-sigma_s)*k_h(h_n(ii,jj-1)) + sigma_s*k_h(h_n(ii,jj)) ) * ...
+                ( K(ii,jj,south)*(H(h_n(ii,jj)) - H(h_n(ii,jj-1)))/delta(ii,jj,south) );
+        end
         
         % Apply boundary conditions
         q_east = (ii < Nx)*q_east;
