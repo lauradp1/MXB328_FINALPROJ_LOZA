@@ -80,23 +80,23 @@ for ii = 1:Nx
         % Generate flux values for each face of interior nodes control volumes
         if ii < Nx
             sigma_e = (h(ii,jj)<h(ii+1,jj)) + (1/2)*(h(ii,jj)==h(ii+1,jj));
-            q_east = ( (1-sigma_e)*k_h(h(ii,jj)) + sigma_e*k_h(h(ii+1,jj)) ) * ...
-                ( K(ii,jj,east)*(H(h(ii+1,jj)) - H(h(ii,jj)))/delta(ii,jj,east) );
+            k_e = (1-sigma_e)*k_h(h(ii,jj)) + sigma_e*k_h(h(ii+1,jj));
+            q_east = - k_e * K(ii,jj,east) * (H(h(ii+1,jj)) - H(h(ii,jj)))/delta(ii,jj,east);
         end
         if ii > 1
             sigma_w = (h(ii,jj)>h(ii-1,jj)) + (1/2)*(h(ii,jj)==h(ii-1,jj));
-            q_west = ( (1-sigma_w)*k_h(h(ii-1,jj)) + sigma_w*k_h(h(ii,jj)) ) * ...
-                ( K(ii,jj,west)*(H(h(ii,jj)) - H(h(ii-1,jj)))/delta(ii,jj,west) );
+            k_w = (1-sigma_w)*k_h(h(ii-1,jj)) + sigma_w*k_h(h(ii,jj));
+            q_west = - k_w * K(ii,jj,west) * (H(h(ii,jj)) - H(h(ii-1,jj)))/delta(ii,jj,west);
         end
         if jj < Nz
             sigma_n = (h(ii,jj)<h(ii,jj+1)) + (1/2)*(h(ii,jj)==h(ii,jj+1));
-            q_north = ( (1-sigma_n)*k_h(h(ii,jj)) + sigma_n*k_h(h(ii,jj+1)) ) * ...
-                ( K(ii,jj,north)*(H(h(ii,jj+1)) - H(h(ii,jj)))/delta(ii,jj,north) );
+            k_n = (1-sigma_n)*k_h(h(ii,jj)) + sigma_n*k_h(h(ii,jj+1));
+            q_north = - k_n * K(ii,jj,north) * (H(h(ii,jj+1)) - H(h(ii,jj)))/delta(ii,jj,north);
         end
         if jj > 1
             sigma_s = (h(ii,jj)>h(ii,jj-1)) + (1/2)*(h(ii,jj)==h(ii,jj-1));
-            q_south = ( (1-sigma_s)*k_h(h(ii,jj-1)) + sigma_s*k_h(h(ii,jj)) ) * ...
-                ( K(ii,jj,south)*(H(h(ii,jj)) - H(h(ii,jj-1)))/delta(ii,jj,south) );
+            k_s = (1-sigma_s)*k_h(h(ii,jj-1)) + sigma_s*k_h(h(ii,jj));
+            q_south = - k_s * K(ii,jj,south) * (H(h(ii,jj)) - H(h(ii,jj-1)))/delta(ii,jj,south);
         end
         
         % Apply boundary conditions
@@ -119,26 +119,27 @@ for ii = 1:Nx
         
         % Generate flux values for each face of node control volume
         if ii < Nx
-            q_east = ( (1-sigma_e)*k_h(h_n(ii,jj)) + sigma_e*k_h(h_n(ii+1,jj)) ) * ...
-                ( K(ii,jj,east)*(H(h_n(ii+1,jj)) - H(h_n(ii,jj)))/delta(ii,jj,east) );
+            k_e = (1-sigma_e)*k_h(h_n(ii,jj)) + sigma_e*k_h(h_n(ii+1,jj));
+            q_east = - k_e * K(ii,jj,east) * (H(h_n(ii+1,jj)) - H(h_n(ii,jj)))/delta(ii,jj,east);
         end
         if ii > 1
-            q_west = ( (1-sigma_w)*k_h(h_n(ii-1,jj)) + sigma_w*k_h(h_n(ii,jj)) ) * ...
-                ( K(ii,jj,west)*(H(h_n(ii,jj)) - H(h_n(ii-1,jj)))/delta(ii,jj,west) );
+            k_w = (1-sigma_w)*k_h(h_n(ii-1,jj)) + sigma_w*k_h(h_n(ii,jj));
+            q_west = - k_w * K(ii,jj,west) * (H(h_n(ii,jj)) - H(h_n(ii-1,jj)))/delta(ii,jj,west);
         end
         if jj < Nz
-            q_north = ( (1-sigma_n)*k_h(h_n(ii,jj)) + sigma_n*k_h(h_n(ii,jj+1)) ) * ...
-                ( K(ii,jj,north)*(H(h_n(ii,jj+1)) - H(h_n(ii,jj)))/delta(ii,jj,north) );
+            k_n = (1-sigma_n)*k_h(h_n(ii,jj)) + sigma_n*k_h(h_n(ii,jj+1));
+            q_north = - k_n * K(ii,jj,north) * (H(h_n(ii,jj+1)) - H(h_n(ii,jj)))/delta(ii,jj,north);
         end
         if jj > 1
-            q_south = ( (1-sigma_s)*k_h(h_n(ii,jj-1)) + sigma_s*k_h(h_n(ii,jj)) ) * ...
-                ( K(ii,jj,south)*(H(h_n(ii,jj)) - H(h_n(ii,jj-1)))/delta(ii,jj,south) );
+            k_s = (1-sigma_s)*k_h(h_n(ii,jj-1)) + sigma_s*k_h(h_n(ii,jj));
+            q_south = - k_s * K(ii,jj,south) * (H(h_n(ii,jj)) - H(h_n(ii,jj-1)))/delta(ii,jj,south);
         end
         
         % Apply boundary conditions
         q_east = (ii < Nx)*q_east;
         q_west = (ii > 1)*q_west + ...
-            (ii == 1 & 3<=z(jj) & z(jj)<=5)*(-Kc*(Hc - H(h_n(ii,jj)))/Xc);
+            (ii == 1 & 3<=z(jj) & z(jj)<=5 & H(h_n(ii,jj)) > Hc) * ...
+            (-Kc*(Hc - H(h_n(ii,jj)))/Xc);
         q_north = (jj < Nz)*q_north + (jj == Nz)*q_rain;
         q_south = (jj > 1)*q_south;
         
