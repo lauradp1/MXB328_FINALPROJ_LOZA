@@ -27,6 +27,7 @@ meshLims_temp = meshLims; meshLims_temp(1,1) = 20;
 [nodes_fill] = meshNodes(meshLims_temp,r,numNodes,refinements);
 xNodes = [xNodes nodes_fill{1}]; zNodes = [zNodes nodes_fill{2}];
 xNodes = sort(unique(xNodes)); zNodes = sort(unique(zNodes));
+zNodes = zNodes(length(zNodes):-1:1);
 
 % Plot nodes on material distribution plot
 nodesTotal = length(xNodes)*length(zNodes);
@@ -54,7 +55,7 @@ constants.R = [0.1,0.2];
 constants.L = [L1,L2];
 
 % Compute time-independent variables
-[K,k,psi,Q,delta,Delta,DV,quadMats] = nodeConstants2D(materials,constants,xNodes,zNodes);
+[K,S,k,psi,Q,delta,Delta,DV,quadMats] = nodeConstants2D(materials,constants,xNodes,zNodes);
 
 % Collate in structure for easy transfer between functions
 meshConfig.delta = delta;
@@ -77,36 +78,42 @@ discretisationConsts.Hc = [];
 discretisationConsts.Xc = [];
 
 q_rain = 4; % just a random constant choice
-h_0 = -1 + ((-5 + 1).*repmat(zNodes,length(xNodes),1))./L2;
+h_0 = -1 + ((-5 + 1).*repmat(zNodes,length(xNodes),1)')./L2;
 
 F = @(h) Ffunc(h,h_0,k,psi,Q,q_rain,nodes,meshConfig,discretisationConsts);
+
+Nx = length(xNodes); Nz = length(zNodes);
+S_0 = zeros(Nz,Nx); psi_0 = zeros(Nz,Nx);
+for i = 1:Nx
+    for j = 1:Nz
+        hpMats = squeeze(matNames==quadMats(j,i,:)); % materials in surrounding quadrants of node
+        S_0(j,i) = sum((S(h_0(j,i))*hpMats).*(squeeze(DV(j,i,:))'))/(Delta(j,i,1)*Delta(j,i,2));
+        psi_0(j,i) = sum((psi(h_0(j,i))*hpMats).*(squeeze(DV(j,i,:))'))/(Delta(j,i,1)*Delta(j,i,2));
+    end
+end
 
 
 %%
 
-% Nmats by 4 to tell what material at each quadrant
-% hpMats = squeeze(matNames==quadMats(10,10,:));
-% 
-% h = -2;
-% 
-% % This is to compute k_hp and psi_hp approximations
-% psi_p = @(h) sum((psi(h)*hpMats).*(squeeze(DV(10,30,:))'))/(Delta(10,30,1)*Delta(10,30,2));
-% k_p = sum((k(h)*hpMats).*(squeeze(DV(10,30,:))'))/(Delta(10,30,1)*Delta(10,30,2));
-% 
-% % 10,10 would be replaced with i,j in loop in Gfunc
-% 
-% % For using Q will need to also do (psi_p(h(i,j))/psi_p(0) > 0.5)*Q
-% % since psi_p(0) (or any h >= 0) corresponds to only psi_sat averages)
-% 
-% 
-% (psi_p(h)/psi_p(0) > 0.5)*Q(x(i),z(i))
+close all;
+plt = heatmap(h_0,'GridVisible','off');
+plt.XDisplayLabels = nan(size(plt.XDisplayData));
+plt.YDisplayLabels = nan(size(plt.YDisplayData));
+colormap(flipud(autumn))
+title('Initial Pressure Heads h_0');
 
+figure
+plt2 = heatmap(psi_0,'GridVisible','off');
+plt2.XDisplayLabels = nan(size(plt2.XDisplayData));
+plt2.YDisplayLabels = nan(size(plt2.YDisplayData));
+title('Initial Water Content \psi_0')
 
-
-
-
-
-
+figure
+plt3 = heatmap(S_0,'GridVisible','off');
+plt3.XDisplayLabels = nan(size(plt3.XDisplayData));
+plt3.YDisplayLabels = nan(size(plt3.YDisplayData));
+colormap cool
+title('Initial Relative Saturation S_0')
 
 
 
