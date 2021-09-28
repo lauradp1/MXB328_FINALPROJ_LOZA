@@ -15,36 +15,45 @@ rtol = optionsNewton.rtol;
 maxiters = optionsNewton.maxiters;
 
 % Initialise
-N = length(h_n);
+[Nz,Nx] = size(h_n);
 F_k = F(h_n);
 norm_Fk = norm(F_k,2);
 norm_F0 = norm_Fk;
-h = h_n;
+h_k = h_n;
 
 % Perform Newton iterations until convergence
 for k = 1:maxiters
+    k
+    % Convert h to vector for use with some functions
+    h_vec = reshape(h_k,Nx*Nz,1);
+    
     % Generate Jacobian every m iterations
     if ~mod(k-1,m)
         % if jacobian free is just an approximation of J then make it so it
         % gets approximated in the same function here:
-        J = jacobian(h,F_k,N,optionsJacobian);
+        J = @(h) jacobian(h,F,F_k,optionsJacobian);
     end
     
     % Solve for the Newton step
         % will J always be in the right format? Or will diagonal need its
         % own variation?
         % is h the right choice for x0?
-    delta_h = GMRES(J(h),-F(h),h,optionsGMRES);
+%     delta_h = GMRES(-J(h_k),F_k,h_vec,optionsGMRES);
+    delta_h = -J(h_k)\F_k;
+    %convert delta_h vector to matrix
+    delta_h = reshape(delta_h,size(h_k));
     
     % Use Line Searching to converge
-    lambda = lineSearching(h,delta_h,F,norm_Fk,optionsLineSearching);
+    lambda = lineSearching(h_k,delta_h,F,norm_Fk,optionsLineSearching);
     
     % Accept Newton iteration
-    F_k = F(h + lambda*delta_h);
-    norm_Fk = norm(F_k,2);
+    h_k = h_k + lambda*delta_h;
+    F_k = F(h_k);
+    norm_Fk = norm(F_k,2)
     
     % Check for convergence
     if norm_Fk <= rtol*norm_F0 + atol
+        h = h_k;
         break;
     end
 end

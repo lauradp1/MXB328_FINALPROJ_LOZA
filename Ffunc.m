@@ -58,15 +58,19 @@ z = nodes.zNodes;
 
 % Define readability constants
 east = 1; west = 2; north = 3; south = 4;
-Nx = length(xNodes); Nz = length(zNodes);
+Nx = length(x); Nz = length(z);
 
 % Initialise vectors used in time-discretisation F
-G = zeros(Nx*Nz,1);
-Psi = zeros(Nx*Nz,1);
-Q = zeros(Nx*Nz,1);
+G = zeros(Nx*Nz,1); G_n = zeros(Nx*Nz,1);
+Psi = zeros(Nx*Nz,1); Psi_n = zeros(Nx*Nz,1);
+Q = zeros(Nx*Nz,1); Q_n = zeros(Nx*Nz,1);
 
 % Iterate over the mesh nodes to generate Psi_n, G_n, Q_n, Psi, G, Q
 for ii = 1:Nx
+    q_east = 0;
+    q_west = 0;
+    q_north = 0;
+    q_south = 0;
     for jj = 1:Nz
         
         % Generate H, psi and k functions for a given h value
@@ -81,7 +85,7 @@ for ii = 1:Nx
         if ii < Nx
             sigma_e = (H(h(jj,ii))<H(h(jj,ii+1))) + (1/2)*(H(h(jj,ii))==H(h(jj,ii+1)));
             k_e = (1-sigma_e)*k_h(h(jj,ii)) + sigma_e*k_h(h(jj,ii+1));
-            q_east = - k_e * K(jj,ii,east) * (H(h(jj,ii+1)) - H(h(jj,ii)))/delta(jj,ii,east);
+            q_east = k_e * K(jj,ii,east) * (H(h(jj,ii+1)) - H(h(jj,ii)))/delta(jj,ii,east);
         end
         if ii > 1
             sigma_w = (H(h(jj,ii))>H(h(jj,ii-1))) + (1/2)*(H(h(jj,ii))==H(h(jj,ii-1)));
@@ -91,7 +95,7 @@ for ii = 1:Nx
         if jj < Nz
             sigma_n = (H(h(jj,ii))<H(h(jj+1,ii))) + (1/2)*(H(h(jj,ii))==H(h(jj+1,ii)));
             k_n = (1-sigma_n)*k_h(h(jj,ii)) + sigma_n*k_h(h(jj+1,ii));
-            q_north = - k_n * K(jj,ii,north) * (H(h(jj+1,ii)) - H(h(jj,ii)))/delta(jj,ii,north);
+            q_north = k_n * K(jj,ii,north) * (H(h(jj+1,ii)) - H(h(jj,ii)))/delta(jj,ii,north);
         end
         if jj > 1
             sigma_s = (H(h(jj,ii))>H(h(jj-1,ii))) + (1/2)*(H(h(jj,ii))==H(h(jj-1,ii)));
@@ -103,8 +107,8 @@ for ii = 1:Nx
         q_east = (ii < Nx)*q_east;
         q_west = (ii > 1)*q_west + ...
             (ii == 1 & 3<=z(jj) & z(jj)<=5 & H(h(jj,ii)) > Hc) * ...
-            (-Kc*(Hc - H(h(jj,ii)))/Xc);
-        q_north = (jj < Nz)*q_north + (jj == Nz)*q_rain;
+            (Kc*(Hc - H(h(jj,ii)))/Xc);
+        q_north = (jj < Nz)*q_north + (jj == Nz)*-q_rain;
         q_south = (jj > 1)*q_south;
         
         % Generate and save Q value at current node
@@ -120,7 +124,7 @@ for ii = 1:Nx
         % Generate flux values for each face of node control volume
         if ii < Nx
             k_e = (1-sigma_e)*k_h(h_n(jj,ii)) + sigma_e*k_h(h_n(jj,ii+1));
-            q_east = - k_e * K(jj,ii,east) * (H(h_n(jj,ii+1)) - H(h_n(jj,ii)))/delta(jj,ii,east);
+            q_east = k_e * K(jj,ii,east) * (H(h_n(jj,ii+1)) - H(h_n(jj,ii)))/delta(jj,ii,east);
         end
         if ii > 1
             k_w = (1-sigma_w)*k_h(h_n(jj,ii-1)) + sigma_w*k_h(h_n(jj,ii));
@@ -128,7 +132,7 @@ for ii = 1:Nx
         end
         if jj < Nz
             k_n = (1-sigma_n)*k_h(h_n(jj,ii)) + sigma_n*k_h(h_n(jj+1,ii));
-            q_north = - k_n * K(jj,ii,north) * (H(h_n(jj+1,ii)) - H(h_n(jj,ii)))/delta(jj,ii,north);
+            q_north = k_n * K(jj,ii,north) * (H(h_n(jj+1,ii)) - H(h_n(jj,ii)))/delta(jj,ii,north);
         end
         if jj > 1
             k_s = (1-sigma_s)*k_h(h_n(jj-1,ii)) + sigma_s*k_h(h_n(jj,ii));
@@ -139,17 +143,17 @@ for ii = 1:Nx
         q_east = (ii < Nx)*q_east;
         q_west = (ii > 1)*q_west + ...
             (ii == 1 & 3<=z(jj) & z(jj)<=5 & H(h_n(jj,ii)) > Hc) * ...
-            (-Kc*(Hc - H(h_n(jj,ii)))/Xc);
-        q_north = (jj < Nz)*q_north + (jj == Nz)*q_rain;
+            (Kc*(Hc - H(h_n(jj,ii)))/Xc);
+        q_north = (jj < Nz)*q_north + (jj == Nz)*-q_rain;
         q_south = (jj > 1)*q_south;
         
         % Generate and save Q value at current node
         % psi_p(h>=0) generates average psi_sat value in node domain
-        Q(Nz*(ii-1)+jj) = (psi_h(h_n(jj,ii))/psi_h(0) > 0.5) * Q_p(x(ii),z(jj));
+        Q_n(Nz*(ii-1)+jj) = (psi_h(h_n(jj,ii))/psi_h(0) > 0.5) * Q_p(x(ii),z(jj));
         % Generate and save G value at current node
-        G(Nz*(ii-1)+jj) = (q_east + q_west + q_north + q_south)/(Delta(jj,ii,1)*Delta(jj,ii,2));
+        G_n(Nz*(ii-1)+jj) = (q_east + q_west + q_north + q_south)/(Delta(jj,ii,1)*Delta(jj,ii,2));
         % Generate and save Psi value at current node
-        Psi(Nz*(ii-1)+jj) = psi_h(h_n(jj,ii));
+        Psi_n(Nz*(ii-1)+jj) = psi_h(h_n(jj,ii));
         
     end
 end

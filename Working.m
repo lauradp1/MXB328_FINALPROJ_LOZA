@@ -14,6 +14,9 @@ matNames = fieldnames(materials); % Save names of materials for later
 c_r = [1,0.2];        % Refinement constants
 r = [1.2,1];          % Constants to determine spread of nodes (after refinement)
 numNodes = [8,20];    % Number of x and z nodes to add (after refinement)
+c_r = [0,0];
+r = [1,1];
+numNodes = [5,5];
 
 % Generate base mesh
 [nodes,refinements,meshLims,materialsPlot] = meshMaterialNodes(materials,c_r);
@@ -39,8 +42,8 @@ for x = xNodes
 end
 set(materialsPlot, 'visible', 'on');
 % profview
-%%
-% clear; clc;
+%% Construct and define constants
+
 % Define constants in same order as materials:
 %   alluvium, cappingLayer, topsoil, landfill
 constants.Kxx = [17.28,0.052,0.2,10];
@@ -70,51 +73,131 @@ clear nodes;
 nodes.xNodes = xNodes;
 nodes.zNodes = zNodes;
 
+% Define time range
+t = linspace(0,5,60);
+dt = t(2)-t(1);
+
 % Collate discretisation constants
-discretisationConsts.dt = 1; % should replace this with = dt; and define dt at top with t
-discretisationConsts.theta = [];
-discretisationConsts.Kc = [];
-discretisationConsts.Hc = [];
-discretisationConsts.Xc = [];
+discretisationConsts.dt = dt;
+discretisationConsts.theta = 0.5;
+discretisationConsts.Kc = 0.0108;
+discretisationConsts.Hc = 4;
+discretisationConsts.Xc = 5;
+
+% Collate Newton method constants
+optionsNewton.m = 1;
+optionsNewton.atol = 1e-10;
+optionsNewton.rtol = 1e-10;
+optionsNewton.maxiters = 300;
+
+% Collate Line Searching constants
+optionsLineSearching.dev = 1e-4;
+
+% Collate GMRES constants
+optionsGMRES.atol = 1e-10;
+optionsGMRES.rtol = 1e-10;
+optionsGMRES.maxiters = 300;
+optionsGMRES.precond = 'Jacobi'; % Jacobi or Gauss-Seidel
+
+% Collate Jacobian constants
+optionsJacobian.var = 0;
+
+% Collate all options and constants for Newton-Krylov
+options.Newton = optionsNewton;
+options.LineSearching = optionsLineSearching;
+options.GMRES = optionsGMRES;
+options.Jacobian = optionsJacobian;
 
 q_rain = 4; % just a random constant choice
-h_0 = -1 + ((-5 + 1).*repmat(zNodes,length(xNodes),1)')./L2;
 
-F = @(h) Ffunc(h,h_0,k,psi,Q,q_rain,nodes,meshConfig,discretisationConsts);
 
+%% Solve over time
+
+figure;
 Nx = length(xNodes); Nz = length(zNodes);
-S_0 = zeros(Nz,Nx); psi_0 = zeros(Nz,Nx);
-for i = 1:Nx
-    for j = 1:Nz
-        hpMats = squeeze(matNames==quadMats(j,i,:)); % materials in surrounding quadrants of node
-        S_0(j,i) = sum((S(h_0(j,i))*hpMats).*(squeeze(DV(j,i,:))'))/(Delta(j,i,1)*Delta(j,i,2));
-        psi_0(j,i) = sum((psi(h_0(j,i))*hpMats).*(squeeze(DV(j,i,:))'))/(Delta(j,i,1)*Delta(j,i,2));
+
+h_solved = zeros(Nz,Nx,length(t));
+S_solved = zeros(Nz,Nx,length(t));
+psi_solved = zeros(Nz,Nx,length(t));
+
+h_solved(:,:,1) = -1 + ((-5 + 1).*repmat(zNodes,length(xNodes),1)')./L2;
+
+for t_n = 2:length(t)
+    
+    % Plot the previous time solution and store the values as vector
+    h_vec = zeros(Nx*Nz,1);
+    for i = 1:Nx
+        for j = 1:Nz
+            hpMats = squeeze(matNames==quadMats(j,i,:)); % materials in surrounding quadrants of node
+            S_solved(j,i,t_n-1) = sum((S(h_solved(j,i,t_n-1))*hpMats).*(squeeze(DV(j,i,:))'))/(Delta(j,i,1)*Delta(j,i,2));
+            psi_solved(j,i,t_n-1) = sum((psi(h_solved(j,i,t_n-1))*hpMats).*(squeeze(DV(j,i,:))'))/(Delta(j,i,1)*Delta(j,i,2));
+            h_vec(Nz*(i-1)+j) = h_solved(j,i,t_n-1);
+        end
     end
+    % heads
+    solutionPlot(1) = subplot(1,3,1);
+    surf(xNodes,zNodes,h_solved(:,:,t_n-1));
+    view(2)
+    colormap(solutionPlot(1),flipud(autumn))
+    shading interp;
+    colorbar
+    % water content
+    solutionPlot(2) = subplot(1,3,2);
+    surf(xNodes,zNodes,psi_solved(:,:,t_n-1));
+    view(2)
+    colormap(solutionPlot(2),winter)
+    shading interp;
+    colorbar
+    % saturation
+    solutionPlot(3) = subplot(1,3,3);
+    surf(xNodes,zNodes,S_solved(:,:,t_n-1));
+    view(2)
+    colormap(solutionPlot(3),cool)
+    shading interp;
+    colorbar
+    % average water content (moisture)
+    avgSat = sum(sum(psi_solved(:,:,t_n-1)))/(Nx*Nz);
+    drawnow;
+    
+    % Form F for current time-step
+    h_vec = h_solved(:,:,t_n-1);
+    F = @(h) Ffunc(h,h_vec,k,psi,Q,q_rain,nodes,meshConfig,discretisationConsts);
+    
+    % Obtain h for current time-step with Newton-Krylov
+    [h_solved(:,:,t_n),~] = newton_krylov(h_vec,F,options);
+    
+end
+
+
+%%
+close all;
+figure
+
+for i = 1:40
+    plot(i,i,'r*')
+    hold on;
+plot(1:i,1:i,'k')
+
+
+xlim([0 50])
+ylim([0 50])
+drawnow;
+pause(0.25)
 end
 
 
 %%
 
-close all;
-plt = heatmap(h_0,'GridVisible','off');
-plt.XDisplayLabels = nan(size(plt.XDisplayData));
-plt.YDisplayLabels = nan(size(plt.YDisplayData));
-colormap(flipud(autumn))
-title('Initial Pressure Heads h_0');
-
-figure
-plt2 = heatmap(psi_0,'GridVisible','off');
-plt2.XDisplayLabels = nan(size(plt2.XDisplayData));
-plt2.YDisplayLabels = nan(size(plt2.YDisplayData));
-title('Initial Water Content \psi_0')
-
-figure
-plt3 = heatmap(S_0,'GridVisible','off');
-plt3.XDisplayLabels = nan(size(plt3.XDisplayData));
-plt3.YDisplayLabels = nan(size(plt3.YDisplayData));
-colormap cool
-title('Initial Relative Saturation S_0')
-
+A = [1,2,3,4;
+    5,6,7,8];
+[Nj,Ni] = size(A);
+A_vec = zeros(Ni*Nj,1);
+for i = 1:Ni
+    for j = 1:Nj
+        A_vec(Nj*(i-1)+j) = A(j,i);
+    end
+end
+A_vec
 
 
 
