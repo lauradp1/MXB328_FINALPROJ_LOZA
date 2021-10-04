@@ -1,4 +1,4 @@
-function [K,S,k,psi,Q,delta,Delta,DV,quadMats] = nodeConstants2D(materials,constants,xNodes,zNodes)
+function [K_vals,S,k,psi,Q,deltas,Deltas,DV,quadMats] = nodeConstants2D(materials,constants,xNodes,zNodes)
 %NODECONSTANTS2D Computes time-independent variables for given mesh so to
 %provide fast access while iterating over time
 % Inputs:
@@ -37,8 +37,8 @@ Nx = length(xNodes); Nz = length(zNodes);
 % Extract material constants
 Kxx = constants.Kxx;
 Kzz = constants.Kzz;
-psi_res = constants.psi_res;
-psi_sat = constants.psi_sat;
+psi_res = constants.psi_res; psi_res = repmat(psi_res,Nx*Nz,1);
+psi_sat = constants.psi_sat; psi_sat = repmat(psi_sat,Nx*Nz,1);
 alpha = constants.alpha;
 n = constants.n;
 m = constants.m;
@@ -47,12 +47,18 @@ R = constants.R; R1 = R(1); R2 = R(2);
 L = constants.L; L1 = L(1); L2 = L(2);
 matNames = fieldnames(materials); % Material names
 
-% Generate S(h), k(h), psi(h) and Q(x,z) for each material
-S = @(h) (h>=0) + (h<0)*(1 + (-alpha*h).^n).^(-m);
-k = @(h) (h>=0) + (h<0)*sqrt(S(h)).*(1 - (1 - S(h).^(m.^(-1))).^m ).^2;
-psi = @(h) (h>=0)*psi_sat + (h<0)*(psi_res + S(h).*(psi_sat - psi_res));
-Q = @(x,z) (0<=x & x<=15 & (L2-l1)<=z & z<=L2)*((L2-l1<=z & z<=L2)*(-R1*(z-L2+l1)^2)/l1^2) + ...
-    (15<x & x<=L1 & (L2-l2)<=z & z<=L2)*((L2-l2<=z & z<=L2)*(-R2*(z-L2+l2)^2)/l2^2);
+% Generate S(h), k(h), psi(h) for each material
+S = @(h) (h>=0) + (h<0).*(1 + (-h*alpha).^n).^(-m);
+k = @(h) (h>=0) + (h<0).*sqrt(S(h)).*(1 - (1 - S(h).^(m.^(-1))).^m ).^2;
+psi = @(h) (h>=0).*psi_sat + (h<0).*(psi_res + S(h).*(psi_sat - psi_res));
+
+% Generate Q using x and z values at each node
+x_vals = repmat(xNodes',Nz,1); z_vals = repmat(zNodes',Nx,1)';
+node_vals = x_vals; node_vals(:,:,2) = z_vals;
+node_vals = reshape(node_vals,[Nx*Nz,2]);
+x = node_vals(:,1); z = node_vals(:,2);
+Q = (0<=x & x<=15 & (L2-l1)<=z & z<=L2).*((L2-l1<=z & z<=L2).*(-R1*(z-L2+l1).^2)/(l1^2)) + ...
+    (15<x & x<=L1 & (L2-l2)<=z & z<=L2).*((L2-l2<=z & z<=L2).*(-R2*(z-L2+l2).^2)/(l2^2));
 
 % Iterate through each node and calculate time-independant values e.g. Kxx
 % and Kzz approximations to use at each node East, West, North and South
@@ -60,7 +66,7 @@ K = zeros(Nz,Nx,4); % 4:Kxx_east,Kxx_west,Kzz_north,Kzz_south
 delta = zeros(Nz,Nx,4); % 4:dx_east,dx_west,dz_north,dz_south
 Delta = zeros(Nz,Nx,2); % 2:Deltax_p,Deltaz_p
 DV = zeros(Nz,Nx,4); % 4:DV_quadrant1,DV_quadrant2,...
-quadMats = strings(Nz,Nx,4);
+quadMats = zeros(Nz,Nx,4);
 for i = 1:Nx
     x_i = xNodes(i);    % Save x-value of current node
     % Save East and West node values
@@ -84,47 +90,61 @@ for i = 1:Nx
             nodeMat = convertCharsToStrings(nodeMaterial(materials,...
                 [x_i+delta(j,i,east)/2,z_i+delta(j,i,north)/2]));
             nodeMats(:,1) = [Kxx(matNames==nodeMat) Kzz(matNames==nodeMat)];
-            % Variables for k_p(h) and psi_p(h) approximations
+            % Variables for k(h) and psi(h) approximations
             DV(j,i,1) = (delta(j,i,east)*delta(j,i,north))/4;
-            quadMats(j,i,1) = nodeMat;
+            quadMats(j,i,1) = find(matNames==nodeMat);
         end
         if x_w ~= x_i && z_n ~= z_i     % quadrant 2
             nodeMat = convertCharsToStrings(nodeMaterial(materials,...
                 [x_i-delta(j,i,west)/2,z_i+delta(j,i,north)/2]));
             nodeMats(:,2) = [Kxx(matNames==nodeMat) Kzz(matNames==nodeMat)];
-            % Variables for k_p(h) and psi_p(h) approximations
+            % Variables for k(h) and psi(h) approximations
             DV(j,i,2) = (delta(j,i,west)*delta(j,i,north))/4;
-            quadMats(j,i,2) = nodeMat;
+            quadMats(j,i,2) = find(matNames==nodeMat);
         end
         if x_w ~= x_i && z_s ~= z_i     % quadrant 3
             nodeMat = convertCharsToStrings(nodeMaterial(materials,...
                 [x_i-delta(j,i,west)/2,z_i-delta(j,i,south)/2]));
             nodeMats(:,3) = [Kxx(matNames==nodeMat) Kzz(matNames==nodeMat)];
-            % Variables for k_p(h) and psi_p(h) approximations
+            % Variables for k(h) and psi(h) approximations
             DV(j,i,3) = (delta(j,i,west)*delta(j,i,south))/4;
-            quadMats(j,i,3) = nodeMat;
+            quadMats(j,i,3) = find(matNames==nodeMat);
         end
         if x_e ~= x_i && z_s ~= z_i     % quadrant 4
             nodeMat = convertCharsToStrings(nodeMaterial(materials,...
                 [x_i+delta(j,i,east)/2,z_i-delta(j,i,south)/2]));
             nodeMats(:,4) = [Kxx(matNames==nodeMat) Kzz(matNames==nodeMat)];
-            % Variables for k_p(h) and psi_p(h) approximations
+            % Variables for k(h) and psi(h) approximations
             DV(j,i,4) = (delta(j,i,east)*delta(j,i,south))/4;
-            quadMats(j,i,4) = nodeMat;
+            quadMats(j,i,4) = find(matNames==nodeMat);
         end
         
         % Compute the Kxx (East,West) and Kzz (North,South) approximations
-        % THIS MAY BE WRONG SHOULD DOUBLE CHECK VALUES ARE WHAT WE WANT
-        K(j,i,east) = (-nodeMats(1,4)*delta(j,i,south) - ...
+        K(j,i,east) = (nodeMats(1,4)*delta(j,i,south) + ...
             nodeMats(1,1)*delta(j,i,north)) / (2);
-        K(j,i,west) = (-nodeMats(1,3)*delta(j,i,south) - ...
+        K(j,i,west) = (nodeMats(1,3)*delta(j,i,south) + ...
             nodeMats(1,2)*delta(j,i,north)) / (2);
-        K(j,i,north) = (-nodeMats(2,1)*delta(j,i,east) - ...
+        K(j,i,north) = (nodeMats(2,1)*delta(j,i,east) + ...
             nodeMats(2,2)*delta(j,i,west)) / (2);
-        K(j,i,south) = (-nodeMats(2,4)*delta(j,i,east) - ...
+        K(j,i,south) = (nodeMats(2,4)*delta(j,i,east) + ...
             nodeMats(2,3)*delta(j,i,west)) / (2);
     end
 end
+
+% Reshape into vectors
+K_vals.east = reshape(K(:,:,east),[Nx*Nz,1]);
+K_vals.west = reshape(K(:,:,west),[Nx*Nz,1]);
+K_vals.north = reshape(K(:,:,north),[Nx*Nz,1]);
+K_vals.south = reshape(K(:,:,south),[Nx*Nz,1]);
+deltas.east = reshape(delta(:,:,1),[Nx*Nz,1]);
+deltas.west = reshape(delta(:,:,2),[Nx*Nz,1]);
+deltas.north = reshape(delta(:,:,3),[Nx*Nz,1]);
+deltas.south = reshape(delta(:,:,4),[Nx*Nz,1]);
+Deltas.x = reshape(Delta(:,:,1),[Nx*Nz,1]);
+Deltas.z = reshape(Delta(:,:,2),[Nx*Nz,1]);
+Deltas.xz = Deltas.x .* Deltas.z;
+DV = reshape(DV,Nz*Nx,4);
+quadMats = reshape(quadMats,Nz*Nx,4);
 
 end
 

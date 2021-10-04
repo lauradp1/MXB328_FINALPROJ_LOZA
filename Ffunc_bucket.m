@@ -1,4 +1,4 @@
-function F = Ffunc(h,h_n,k,psi,Q_p,nodes,meshConfig,discretisationConsts)
+function F = Ffunc_bucket(h,h_n,k,psi,nodes,meshConfig,discretisationConsts)
 %FFUNC Generates a discretisation of the 2-dimensional PDE of Richard's
 %equation at the current time-step to be solved via Newton-Krylov
 % Inputs:
@@ -49,12 +49,12 @@ dt = discretisationConsts.dt;
 theta = discretisationConsts.theta;
 
 % Obtain Psi, flux and Q for h
-[Psi,flux,Q] = FfuncVars(h,nodes,k,psi,Q_p,K_vals,quadMats,DV,deltas,Deltas,discretisationConsts);
+[Psi,flux] = FfuncVars_bucket(h,nodes,k,psi,K_vals,quadMats,DV,deltas,Deltas,discretisationConsts);
 
 % Obtain Psi, flux and Q for h_n
-[Psi_n,flux_n,Q_n] = FfuncVars(h_n,nodes,k,psi,Q_p,K_vals,quadMats,DV,deltas,Deltas,discretisationConsts);
+[Psi_n,flux_n] = FfuncVars_bucket(h_n,nodes,k,psi,K_vals,quadMats,DV,deltas,Deltas,discretisationConsts);
 
 % Form F with Psi, G, Q, Psi_n, G_n, Q_n
-F = Psi - Psi_n + dt*((theta*flux + (1-theta)*flux_n) - (theta*Q + (1-theta)*Q_n));
+F = Psi - Psi_n + dt*((theta*flux + (1-theta)*flux_n));
 
 end
