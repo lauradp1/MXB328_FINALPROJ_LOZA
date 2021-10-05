@@ -2,7 +2,7 @@
 rainfall = readtable('MackayAlert.csv');
 %% Remove unneccesary columns and convert to matrix
 rainfall(:,[1,2,7,8]) = [];
-rainfall = table2array(rainfall); %hello
+rainfall = table2array(rainfall);
 %% Remove all other years outside of 2012-2020
 rainfall = rainfall(rainfall(:,1)<2021 & rainfall(:,1)>=2012,:);
 %% Change format of data
