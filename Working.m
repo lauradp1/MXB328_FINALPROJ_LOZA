@@ -13,9 +13,6 @@ materials.landfill = landfill;
 c_r = [1,0.2];        % Refinement constants
 r = [1.2,1];          % Constants to determine spread of nodes (after refinement)
 numNodes = [8,20];    % Number of x and z nodes to add (after refinement)
-c_r = [0,0];
-r = [1,1];
-numNodes = [5,5];
 
 % Generate base mesh
 [nodes,refinements,meshLims,materialsPlot] = meshMaterialNodes(materials,c_r);
@@ -88,7 +85,7 @@ discretisationConsts.theta = 0.5;
 discretisationConsts.Kc = 0.0108;
 discretisationConsts.Hc = 4;
 discretisationConsts.Xc = 5;
-discretisationConsts.q_rain = 400; % just a random constant choice
+discretisationConsts.q_rain = 0.05; % just a random constant choice
 
 % Collate Newton method constants
 optionsNewton.m = 1;
@@ -123,8 +120,10 @@ h_solved = zeros(Nz,Nx,length(t));
 S_solved = zeros(Nz,Nx,length(t));
 psi_solved = zeros(Nz,Nx,length(t));
 
-h_solved(:,:,1) = -1 + ((-5 + 1).*repmat(zNodes',Nx,1)')./L2;
+h_solved(:,:,1) = -1 + ((-5 + 1)*repmat(zNodes',Nx,1)')/L2;
 h_n = reshape(h_solved(:,:,1),[Nz*Nx,1]);
+
+avgSatsMeasured = zeros(length(t),1);
 
 for t_n = 2:length(t)
     
@@ -138,28 +137,32 @@ for t_n = 2:length(t)
     
     % Plot the previous time solution and store the values as vector
     % heads
-    solutionPlot(1) = subplot(1,3,1);
+    solutionPlot(1) = subplot(2,3,1);
     surf(xNodes,zNodes,h_solved(:,:,t_n-1));
     view(2)
     colormap(solutionPlot(1),flipud(autumn))
     shading interp;
     colorbar
     % water content
-    solutionPlot(2) = subplot(1,3,2);
+    solutionPlot(2) = subplot(2,3,2);
     surf(xNodes,zNodes,psi_solved(:,:,t_n-1));
     view(2)
     colormap(solutionPlot(2),winter)
     shading interp;
     colorbar
     % saturation
-    solutionPlot(3) = subplot(1,3,3);
+    solutionPlot(3) = subplot(2,3,3);
     surf(xNodes,zNodes,S_solved(:,:,t_n-1));
     view(2)
     colormap(solutionPlot(3),cool)
     shading interp;
     colorbar
     % average water content (moisture)
-    avgSat = sum(sum(psi_solved(:,:,t_n-1)))/(Nx*Nz);
+    avgSatsMeasured(t_n-1) = sum(psi_h_n .* Deltas.xz)/(L1*L2);
+    solutionPlot(4) = subplot(2,3,[4,5,6]);
+    plot(t(1:t_n-1),avgSatsMeasured(1:t_n-1),'b');
+    ylim([0,0.5])
+    title("average water content at time-step " + num2str(t_n-1));
     drawnow;
     
     % Form F for current time-step

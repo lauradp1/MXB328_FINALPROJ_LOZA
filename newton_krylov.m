@@ -34,7 +34,7 @@ for k = 1:maxiters
         % will J always be in the right format? Or will diagonal need its
         % own variation?
         % is h the right choice for x0?
-%     delta_h = GMRES(-J(h_k),F_k,h_vec,optionsGMRES);
+%     delta_h = GMRES(-J(h_k),F_k,h_k,optionsGMRES);
     delta_h = -J(h_k)\F_k;
     
     % Use Line Searching to converge

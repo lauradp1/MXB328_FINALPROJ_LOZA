@@ -76,20 +76,20 @@ dt = t(2)-t(1);
 % Collate discretisation constants
 discretisationConsts.dt = dt;
 discretisationConsts.theta = 0.5;
-discretisationConsts.q_rain = 400; % just a random constant choice
+discretisationConsts.q_rain = 0.05; % just a random constant choice
 
 % Collate Newton method constants
 optionsNewton.m = 1;
-optionsNewton.atol = 1e-10;
-optionsNewton.rtol = 1e-10;
+optionsNewton.atol = 1e-6;
+optionsNewton.rtol = 1e-6;
 optionsNewton.maxiters = 300;
 
 % Collate Line Searching constants
 optionsLineSearching.dev = 1e-4;
 
 % Collate GMRES constants
-optionsGMRES.atol = 1e-10;
-optionsGMRES.rtol = 1e-10;
+optionsGMRES.atol = 1e-6;
+optionsGMRES.rtol = 1e-6;
 optionsGMRES.maxiters = 300;
 optionsGMRES.precond = 'Jacobi'; % Jacobi or Gauss-Seidel
 
@@ -110,12 +110,15 @@ h_solved = zeros(Nz,Nx,length(t));
 S_solved = zeros(Nz,Nx,length(t));
 psi_solved = zeros(Nz,Nx,length(t));
 
-h_solved(:,:,1) = -1 + ((-5 + 1).*repmat(zNodes',Nx,1)')./L2;
+h_solved(:,:,1) = -1 + ((-5 + 1)*repmat(zNodes',Nx,1)')/L2;
 h_n = reshape(h_solved(:,:,1),[Nz*Nx,1]);
 
 psi_h_n = psi(h_n)';
 psi_h_n = sum((psi_h_n(quadMats).*DV),2) ./ Deltas.xz;
-avgSat0 = sum(psi_h_n)/(Nx*Nz);
+avgSat0 = sum(psi_h_n.*Deltas.xz)/(L1*L2);
+
+avgSatsModel = zeros(length(t),1);
+avgSatsMeasured = zeros(length(t),1);
 
 for t_n = 2:length(t)
     
@@ -129,29 +132,36 @@ for t_n = 2:length(t)
     
     % Plot the previous time solution and store the values as vector
     % heads
-    solutionPlot(1) = subplot(1,3,1);
+    solutionPlot(1) = subplot(2,3,1);
     surf(xNodes,zNodes,h_solved(:,:,t_n-1));
     view(2)
     colormap(solutionPlot(1),flipud(autumn))
     shading interp;
     colorbar
     % water content
-    solutionPlot(2) = subplot(1,3,2);
+    solutionPlot(2) = subplot(2,3,2);
     surf(xNodes,zNodes,psi_solved(:,:,t_n-1));
     view(2)
     colormap(solutionPlot(2),flipud(winter))
     shading interp;
     colorbar
     % saturation
-    solutionPlot(3) = subplot(1,3,3);
+    solutionPlot(3) = subplot(2,3,3);
     surf(xNodes,zNodes,S_solved(:,:,t_n-1));
     view(2)
     colormap(solutionPlot(3),cool)
     shading interp;
     colorbar
     % average water content (moisture)
-    avgSat = sum(sum(psi_solved(:,:,t_n-1)))/(Nx*Nz)
-    avgSatModel = (discretisationConsts.q_rain/L2)*t(t_n-1) + avgSat0
+    avgSatsMeasured(t_n-1) = sum(psi_h_n .* Deltas.xz)/(L1*L2);
+    avgSatsModel(t_n-1) = (discretisationConsts.q_rain/L2)*t(t_n-1) + avgSat0;
+    solutionPlot(4) = subplot(2,3,[4,5,6]);
+    plot(t(1:t_n-1),avgSatsModel(1:t_n-1),'r')
+    hold on
+    plot(t(1:t_n-1),avgSatsMeasured(1:t_n-1),'b');
+    hold off
+%     ylim([0,0.5])
+    title("average water content at time-step " + num2str(t(t_n-1)));
     drawnow;
     
     % Form F for current time-step

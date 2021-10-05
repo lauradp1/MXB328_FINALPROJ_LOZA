@@ -46,17 +46,16 @@ sigma_n = (H<H_n);
 sigma_s = (H>H_s);
 
 % Approximate k at each node for each surrounding material
-k_p = k(h)'; k_e = k(h_e)'; k_w = k(h_w)'; k_n = k(h_n)'; k_s = k(h_s)';
-k_p = sum((k_p(quadMats).*DV),2) ./ Delta_xz;
-k_e = sum((k_e(quadMats).*DV),2) ./ Delta_xz;
-k_w = sum((k_w(quadMats).*DV),2) ./ Delta_xz;
-k_n = sum((k_n(quadMats).*DV),2) ./ Delta_xz;
-k_s = sum((k_s(quadMats).*DV),2) ./ Delta_xz;
-
-k_e = (1-sigma_e).*k_p + sigma_e.*k_e; k_e(isnan(k_e)) = 0;
-k_w = (1-sigma_w).*k_w + sigma_w.*k_p; k_w(isnan(k_w)) = 0;
-k_n = (1-sigma_n).*k_p + sigma_n.*k_n; k_n(isnan(k_n)) = 0;
-k_s = (1-sigma_s).*k_s + sigma_s.*k_p; k_s(isnan(k_s)) = 0;
+k_hp = k(h)'; k_he = k(h_e)'; k_hw = k(h_w)'; k_hn = k(h_n)'; k_hs = k(h_s)';
+k_hp = sum((k_hp(quadMats).*DV),2) ./ Delta_xz;
+k_he = sum((k_he(quadMats).*DV),2) ./ Delta_xz;
+k_hw = sum((k_hw(quadMats).*DV),2) ./ Delta_xz;
+k_hn = sum((k_hn(quadMats).*DV),2) ./ Delta_xz;
+k_hs = sum((k_hs(quadMats).*DV),2) ./ Delta_xz;
+k_e = (1-sigma_e).*k_hp + sigma_e.*k_he; k_e(isnan(k_e)) = 0;
+k_w = (1-sigma_w).*k_hw + sigma_w.*k_hp; k_w(isnan(k_w)) = 0;
+k_n = (1-sigma_n).*k_hp + sigma_n.*k_hn; k_n(isnan(k_n)) = 0;
+k_s = (1-sigma_s).*k_hs + sigma_s.*k_hp; k_s(isnan(k_s)) = 0;
 
 % Flux values for each node in each direction
 q_e = -k_e .* K_e .* (H_e - H) ./ delta_e;
