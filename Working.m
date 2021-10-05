@@ -76,7 +76,7 @@ nodes.xNodes = xNodes;
 nodes.zNodes = zNodes;
 
 % Define time range
-t = linspace(0,5,60);
+t = linspace(0,5,100);
 dt = t(2)-t(1);
 
 % Collate discretisation constants
@@ -85,7 +85,7 @@ discretisationConsts.theta = 0.5;
 discretisationConsts.Kc = 0.0108;
 discretisationConsts.Hc = 4;
 discretisationConsts.Xc = 5;
-discretisationConsts.q_rain = 0.05; % just a random constant choice
+discretisationConsts.q_rain = 0.005; % just a random constant choice
 
 % Collate Newton method constants
 optionsNewton.m = 1;

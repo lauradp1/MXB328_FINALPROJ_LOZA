@@ -37,13 +37,13 @@ set(materialsPlot, 'visible', 'on');
 
 % Define constants in same order as materials:
 %   alluvium, cappingLayer, topsoil, landfill
-constants.Kxx = 10;
-constants.Kzz = 0.2*10;
-constants.psi_res = 0.025;
-constants.psi_sat = 0.38;
-constants.alpha = 1.5;
-constants.n = 1.2;
-constants.m = 1-1/1.2;
+constants.Kxx = 0.2;
+constants.Kzz = 0.2*constants.Kxx;
+constants.psi_res = 0.05;
+constants.psi_sat = 0.15;
+constants.alpha = 0.95;
+constants.n = 1.256;
+constants.m = 1-1/constants.n;
 constants.l = [1.5,3];
 constants.R = [0.1,0.2];
 constants.L = [L1,L2];
@@ -70,26 +70,26 @@ nodes.xNodes = xNodes;
 nodes.zNodes = zNodes;
 
 % Define time range
-t = linspace(0,5,60);
+t = linspace(0,50,60);
 dt = t(2)-t(1);
 
 % Collate discretisation constants
 discretisationConsts.dt = dt;
 discretisationConsts.theta = 0.5;
-discretisationConsts.q_rain = 0.05; % just a random constant choice
+discretisationConsts.q_rain = 0.005; % just a random constant choice
 
 % Collate Newton method constants
 optionsNewton.m = 1;
-optionsNewton.atol = 1e-6;
-optionsNewton.rtol = 1e-6;
+optionsNewton.atol = 1e-10;
+optionsNewton.rtol = 1e-10;
 optionsNewton.maxiters = 300;
 
 % Collate Line Searching constants
 optionsLineSearching.dev = 1e-4;
 
 % Collate GMRES constants
-optionsGMRES.atol = 1e-6;
-optionsGMRES.rtol = 1e-6;
+optionsGMRES.atol = 1e-10;
+optionsGMRES.rtol = 1e-10;
 optionsGMRES.maxiters = 300;
 optionsGMRES.precond = 'Jacobi'; % Jacobi or Gauss-Seidel
 
@@ -160,7 +160,7 @@ for t_n = 2:length(t)
     hold on
     plot(t(1:t_n-1),avgSatsMeasured(1:t_n-1),'b');
     hold off
-%     ylim([0,0.5])
+%     ylim([0,1])
     title("average water content at time-step " + num2str(t(t_n-1)));
     drawnow;
     
