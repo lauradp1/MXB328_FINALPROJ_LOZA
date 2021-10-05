@@ -1,11 +1,8 @@
-close all;
-clc;
-%clear all;
 %% Import Data
 rainfall = readtable('MackayAlert.csv');
 %% Remove unneccesary columns and convert to matrix
 rainfall(:,[1,2,7,8]) = [];
-rainfall = table2array(rainfall);
+rainfall = table2array(rainfall); %hello
 %% Remove all other years outside of 2012-2020
 rainfall = rainfall(rainfall(:,1)<2021 & rainfall(:,1)>=2012,:);
 %% Change format of data
@@ -83,70 +80,6 @@ xlim([0 366])
 ylabel('Rainfall (mm)','FontSize',20,'Interpreter','LaTeX')
 
 max(average);
-
-%% Fourier Transform
-% t = 1:366; % time vector (days)
-% rain = average; % rain data (mm)
-% Ts = mean(diff(t));
-% Fs = 1/Ts; 
-% Fn = Fs/2;
-% L = numel(t); 
-% FTs = fft(rain - mean(rain))/L;
-% Fv = linspace(0,1,fix(L/2)+1)*Fn;
-% Iv = 1:numel(Fv);
-% 
-% figure 
-% plot(t, abs(FTs(Iv))*2)
-% grid 
-% xlabel('')
-% ylabel('')
-%% 
-% F = fft(average);
-% plot(t,abs(F)/)
-% xlim([0 366])
-%% fourier formula
-% a0 = 1/pi * int(f_data) * dx;
-% an = 1/pi * int(f_data)*cos(n*x) * dx; 
-% bn = 1/pi * int(f_data)*sin(n*x) * dx; 
-% % 
-% f = 0.5*a0+sum(an*cos(n*x))+sum(bn*sin(n*x));
-% 
-
-
-%% Averaging each month
-% Month = [31 29 31 30 31 30 31 31 30 31 30 31];
-% 
-% January = zeros(Month(1),1);
-% February = zeros(Month(2),1);
-% March = zeros(Month(3),1);
-% April = zeros(Month(4),1);
-% May = zeros(Month(5),1);
-% June = zeros(Month(6),1);
-% July = zeros(Month(7),1);
-% August = zeros(Month(8),1);
-% September = zeros(Month(9),1);
-% October = zeros(Month(10),1);
-% November = zeros(Month(11),1);
-% December = zeros(Month(12),1);
-% 
-% for i = 1:length(years)
-%     January = January + rainfallTemp(1:Month(1),i);
-%     February = February + rainfallTemp(sum(Month(1))+1:sum(Month(1:2)),i);
-%     March = March + rainfallTemp(sum(Month(1:2)+1):sum(Month(1:3)),i);
-%     April = April + rainfallTemp(sum(Month(1:3))+1:sum(Month(1:4)),i);
-%     May = May + rainfallTemp(sum(Month(1:4))+1:sum(Month(1:5)),i);
-%     June = June + rainfallTemp(sum(Month(1:5))+1:sum(Month(1:6)),i);
-%     July = July + rainfallTemp(sum(Month(1:6))+1:sum(Month(1:7)),i);
-%     August = August + rainfallTemp(sum(Month(1:7))+1:sum(Month(1:8)),i);
-%     September = September + rainfallTemp(sum(Month(1:8))+1:sum(Month(1:9)),i);
-%     October = October + rainfallTemp(sum(Month(1:9))+1:sum(Month(1:10)),i);
-%     November = November + rainfallTemp(sum(Month(1:10))+1:sum(Month(1:11)),i);
-%     December = December + rainfallTemp(sum(Month(1:11))+1:sum(Month(1:12)),i);
-% end
-% 
-% Months = [January February March April May June July August September ...
-%     October November December];
-
 %% Fourier Calculation
 t = linspace(1,366,366); 
 N = 10;
