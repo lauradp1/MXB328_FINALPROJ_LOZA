@@ -3,12 +3,12 @@ clear; close all; clc;
 %% Generate mesh
 
 % Define mesh materials
-materials.landfill = [0,25;0,25];
+materials.landfill = [0,10;0,15];
 
 % Define node generation constants
 c_r = [0,0];
 r = [1,1];
-numNodes = [25,25];
+numNodes = [10,15];
 
 % Generate base mesh
 [nodes,refinements,meshLims,materialsPlot] = meshMaterialNodes(materials,c_r);
@@ -37,12 +37,12 @@ set(materialsPlot, 'visible', 'on');
 
 % Define constants in same order as materials:
 %   alluvium, cappingLayer, topsoil, landfill
-constants.Kxx = 0.2;
+constants.Kxx = 10;
 constants.Kzz = 0.2*constants.Kxx;
-constants.psi_res = 0.05;
-constants.psi_sat = 0.15;
-constants.alpha = 0.95;
-constants.n = 1.256;
+constants.psi_res = 0.025;
+constants.psi_sat = 0.38;
+constants.alpha = 1.5;
+constants.n = 1.2;
 constants.m = 1-1/constants.n;
 constants.l = [1.5,3];
 constants.R = [0.1,0.2];
@@ -70,7 +70,7 @@ nodes.xNodes = xNodes;
 nodes.zNodes = zNodes;
 
 % Define time range
-t = linspace(0,50,60);
+t = linspace(0,100,100);
 dt = t(2)-t(1);
 
 % Collate discretisation constants

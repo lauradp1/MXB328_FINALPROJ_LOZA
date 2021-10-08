@@ -22,7 +22,6 @@ delta_w = deltas.west;
 delta_n = deltas.north;
 delta_s = deltas.south;
 
-
 % Vectors containing neighbouring heads
 h_e = NaN(Nx*Nz,1); h_e(1:end-Nz) = h(Nz+1:end);
 h_w = NaN(Nx*Nz,1); h_w(Nz+1:end) = h(1:end-Nz);
@@ -49,16 +48,27 @@ k_he = sum((k_he(quadMats).*DV),2) ./ Delta_xz;
 k_hw = sum((k_hw(quadMats).*DV),2) ./ Delta_xz;
 k_hn = sum((k_hn(quadMats).*DV),2) ./ Delta_xz;
 k_hs = sum((k_hs(quadMats).*DV),2) ./ Delta_xz;
-k_e = (1-sigma_e).*k_hp + sigma_e.*k_he; k_e(isnan(k_e)) = 0;
-k_w = (1-sigma_w).*k_hw + sigma_w.*k_hp; k_w(isnan(k_w)) = 0;
-k_n = (1-sigma_n).*k_hp + sigma_n.*k_hn; k_n(isnan(k_n)) = 0;
-k_s = (1-sigma_s).*k_hs + sigma_s.*k_hp; k_s(isnan(k_s)) = 0;
+k_e = (1-sigma_e).*k_hp + sigma_e.*k_he;
+k_w = (1-sigma_w).*k_hw + sigma_w.*k_hp;
+k_n = (1-sigma_n).*k_hp + sigma_n.*k_hn;
+k_s = (1-sigma_s).*k_hs + sigma_s.*k_hp;
 
 % Flux values for each node in each direction
 q_e = -k_e .* K_e .* (H_e - H) ./ delta_e;
 q_w = k_w .* K_w .* (H - H_w) ./ delta_w;
 q_n = -k_n .* K_n .* (H_n - H) ./ delta_n;
 q_s = k_s .* K_s .* (H - H_s) ./ delta_s;
+
+% Use this to check values of vectors in the matrix/mesh view
+% M = reshape(Delta_xz,[Nz,Nx]);
+% figure;
+% spy(M');
+% hold on
+% for i = 1:Nz
+%     for j = 1:Nx
+%         text(i,j,num2str(M(i,j)))
+%     end
+% end
 
 % Apply boundary conditions
 q_e(isnan(q_e)) = 0;
