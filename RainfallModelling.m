@@ -46,7 +46,7 @@ plot(t, s_approx)
 %% Function 
 %s = @(t) a0/2 + sum(an*cos(n*t) + bn*sin(n*t))
 syms n 
-s = @(t) symsym(an*cos(n*t) + bn*sin(n*t),1,inf);
+s = @(t) a0/2 symsym(an*cos(n*t) + bn*sin(n*t),1,inf);
 %% 2012 Data
 % For 2012 rainfall vector
 t = linspace(1,366,366);
