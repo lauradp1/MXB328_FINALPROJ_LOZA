@@ -24,7 +24,7 @@ Nx = length(xNodes); Nz = length(zNodes);
 matNames = fieldnames(materials); Nmats = length(matNames);
 
 % Plot nodes on material distribution plot
-nodesTotal = Nx*Nz;
+N = Nx*Nz;
 for x = xNodes'
     for z = zNodes'
         plot(x, z, 'k.');
@@ -49,19 +49,29 @@ constants.R = [0.1,0.2];
 constants.L = [L1,L2];
 
 % Compute time-independent variables
-[K_vals,S,k,psi,Q,deltas,Deltas,DV,quadMats] = nodeConstants2D(materials,constants,xNodes,zNodes);
+[K_vals,S,k,psi,Q,deltas,Deltas,DVs,quadMats_p] = nodeConstants2D(materials,constants,xNodes,zNodes);
 
 % Collate in structure for easy transfer between functions
 meshConfig.deltas = deltas;
 meshConfig.Deltas = Deltas;
-meshConfig.DV = DV;
+meshConfig.DVs = DVs;
 meshConfig.K_vals = K_vals;
 
 % Remove zeros from quadMats so no indexing errors
 % These edits will not affect computation as DV is 0 where quadMats is 0
-quadMats(quadMats==0) = 1;
-idxCorrection = repmat(0:Nmats:Nmats*Nx*Nz-1,Nmats,1)';
-quadMats = quadMats + idxCorrection;
+quadMats_p(quadMats_p==0) = 1;
+idxCorrection = repmat(0:Nmats:Nmats*N-1,Nmats,1)';
+quadMats_p = quadMats_p + idxCorrection;
+quadMats.quadMats_p = quadMats_p;
+quadMats.quadMats_e = quadMats_p;
+quadMats.quadMats_w = quadMats_p;
+quadMats.quadMats_n = quadMats_p;
+quadMats.quadMats_s = quadMats_p;
+% quadMats.quadMats_e = circshift(quadMats_p,-Nz); quadMats.quadMats_e(end-Nz+1:end,:) = 1;
+% quadMats.quadMats_w = circshift(quadMats_p,Nz); quadMats.quadMats_w(1:Nz,:) = 1;
+% quadMats.quadMats_n = circshift(quadMats_p,-1); quadMats.quadMats_n(Nz:Nz:end,:) = 1;
+% quadMats.quadMats_s = circshift(quadMats_p,1); quadMats.quadMats_s(1:Nz:end,:) = 1;
+
 meshConfig.quadMats = quadMats;
 
 % Collate nodes
@@ -94,7 +104,8 @@ optionsGMRES.maxiters = 300;
 optionsGMRES.precond = 'Jacobi'; % Jacobi or Gauss-Seidel
 
 % Collate Jacobian constants
-optionsJacobian.var = 0;
+optionsJacobian.Nx = Nx;
+optionsJacobian.Nz = Nz;
 
 % Collate all options and constants for Newton-Krylov
 options.Newton = optionsNewton;
@@ -111,10 +122,10 @@ S_solved = zeros(Nz,Nx,length(t));
 psi_solved = zeros(Nz,Nx,length(t));
 
 h_solved(:,:,1) = -1 + ((-5 + 1)*repmat(zNodes',Nx,1)')/L2;
-h_n = reshape(h_solved(:,:,1),[Nz*Nx,1]);
+h_n = reshape(h_solved(:,:,1),[N,1]);
 
 psi_h_n = psi(h_n)';
-psi_h_n = sum((psi_h_n(quadMats).*DV),2) ./ Deltas.xz;
+psi_h_n = sum((psi_h_n(quadMats_p).*DVs.DV),2) ./ Deltas.xz;
 avgSat0 = sum(psi_h_n.*Deltas.xz)/(L1*L2);
 
 avgSatsModel = zeros(length(t),1);
@@ -124,10 +135,10 @@ for t_n = 2:length(t)
     
     % Save psi and S values of previous time-step
     psi_h_n = psi(h_n)';
-    psi_h_n = sum((psi_h_n(quadMats).*DV),2) ./ Deltas.xz;
+    psi_h_n = sum((psi_h_n(quadMats_p).*DVs.DV),2) ./ Deltas.xz;
     psi_solved(:,:,t_n-1) = reshape(psi_h_n,[Nz,Nx]);
     S_h_n = S(h_n)';
-    S_h_n = sum((S_h_n(quadMats).*DV),2) ./ Deltas.xz;
+    S_h_n = sum((S_h_n(quadMats_p).*DVs.DV),2) ./ Deltas.xz;
     S_solved(:,:,t_n-1) = reshape(S_h_n,[Nz,Nx]);
     
     % Plot the previous time solution and store the values as vector

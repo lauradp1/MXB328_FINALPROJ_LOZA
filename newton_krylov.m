@@ -35,6 +35,7 @@ for k = 1:maxiters
         % own variation?
         % is h the right choice for x0?
 %     delta_h = GMRES(-J(h_k),F_k,h_k,optionsGMRES);
+%     spy(J(h_k)<0)
     delta_h = -J(h_k)\F_k;
     
     % Use Line Searching to converge

@@ -1,4 +1,4 @@
-function [K_vals,S,k,psi,Q,deltas,Deltas,DV,quadMats] = nodeConstants2D(materials,constants,xNodes,zNodes)
+function [K_vals,S,k,psi,Q,deltas,Deltas,DVs,quadMats] = nodeConstants2D(materials,constants,xNodes,zNodes)
 %NODECONSTANTS2D Computes time-independent variables for given mesh so to
 %provide fast access while iterating over time
 % Inputs:
@@ -33,12 +33,13 @@ function [K_vals,S,k,psi,Q,deltas,Deltas,DV,quadMats] = nodeConstants2D(material
 % Define readability constants
 east = 1; west = 2; north = 3; south = 4;
 Nx = length(xNodes); Nz = length(zNodes);
+N = Nx*Nz;
 
 % Extract material constants
 Kxx = constants.Kxx;
 Kzz = constants.Kzz;
-psi_res = constants.psi_res; psi_res = repmat(psi_res,Nx*Nz,1);
-psi_sat = constants.psi_sat; psi_sat = repmat(psi_sat,Nx*Nz,1);
+psi_res = constants.psi_res; psi_res = repmat(psi_res,N,1);
+psi_sat = constants.psi_sat; psi_sat = repmat(psi_sat,N,1);
 alpha = constants.alpha;
 n = constants.n;
 m = constants.m;
@@ -55,7 +56,7 @@ psi = @(h) (h>=0).*psi_sat + (h<0).*(psi_res + S(h).*(psi_sat - psi_res));
 % Generate Q using x and z values at each node
 x_vals = repmat(xNodes',Nz,1); z_vals = repmat(zNodes',Nx,1)';
 node_vals = x_vals; node_vals(:,:,2) = z_vals;
-node_vals = reshape(node_vals,[Nx*Nz,2]);
+node_vals = reshape(node_vals,[N,2]);
 x = node_vals(:,1); z = node_vals(:,2);
 Q = (0<=x & x<=15 & (L2-l1)<=z & z<=L2).*((L2-l1<=z & z<=L2).*(-R1*(z-L2+l1).^2)/(l1^2)) + ...
     (15<x & x<=L1 & (L2-l2)<=z & z<=L2).*((L2-l2<=z & z<=L2).*(-R2*(z-L2+l2).^2)/(l2^2));
@@ -131,20 +132,34 @@ for i = 1:Nx
     end
 end
 
-% Reshape into vectors
-K_vals.east = reshape(K(:,:,east),[Nx*Nz,1]);
-K_vals.west = reshape(K(:,:,west),[Nx*Nz,1]);
-K_vals.north = reshape(K(:,:,north),[Nx*Nz,1]);
-K_vals.south = reshape(K(:,:,south),[Nx*Nz,1]);
-deltas.east = reshape(delta(:,:,1),[Nx*Nz,1]);
-deltas.west = reshape(delta(:,:,2),[Nx*Nz,1]);
-deltas.north = reshape(delta(:,:,3),[Nx*Nz,1]);
-deltas.south = reshape(delta(:,:,4),[Nx*Nz,1]);
-Deltas.x = reshape(Delta(:,:,1),[Nx*Nz,1]);
-Deltas.z = reshape(Delta(:,:,2),[Nx*Nz,1]);
+% Reshape into vectors and shifted vectors
+K_vals.east = reshape(K(:,:,east),[N,1]);
+K_vals.west = reshape(K(:,:,west),[N,1]);
+K_vals.north = reshape(K(:,:,north),[N,1]);
+K_vals.south = reshape(K(:,:,south),[N,1]);
+
+deltas.east = reshape(delta(:,:,1),[N,1]);
+deltas.west = reshape(delta(:,:,2),[N,1]);
+deltas.north = reshape(delta(:,:,3),[N,1]);
+deltas.south = reshape(delta(:,:,4),[N,1]);
+
+Deltas.x = reshape(Delta(:,:,1),[N,1]);
+Deltas.x_n = circshift(Deltas.x,-1); % This will be used for north boundary
+Deltas.z = reshape(Delta(:,:,2),[N,1]);
+
 Deltas.xz = Deltas.x .* Deltas.z;
-DV = reshape(DV,Nz*Nx,4);
-quadMats = reshape(quadMats,Nz*Nx,4);
+Deltas.xz_e = circshift(Deltas.xz,-Nz); Deltas.xz_e(end-Nz+1:end) = NaN;
+Deltas.xz_w = circshift(Deltas.xz,Nz); Deltas.xz_w(1:Nz) = NaN;
+Deltas.xz_n = circshift(Deltas.xz,-1); Deltas.xz_n(Nz:Nz:end) = NaN;
+Deltas.xz_s = circshift(Deltas.xz,1); Deltas.xz_s(1:Nz:end) = NaN;
+
+DVs.DV = reshape(DV,N,4);
+DVs.DV_e = circshift(DVs.DV,-Nz); DVs.DV_e(end-Nz+1:end,:) = NaN;
+DVs.DV_w = circshift(DVs.DV,Nz); DVs.DV_w(1:Nz,:) = NaN;
+DVs.DV_n = circshift(DVs.DV,-1); DVs.DV_n(Nz:Nz:end,:) = NaN;
+DVs.DV_s = circshift(DVs.DV,1); DVs.DV_s(1:Nz:end,:) = NaN;
+
+quadMats = reshape(quadMats,N,4);
 
 end
 

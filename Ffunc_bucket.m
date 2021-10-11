@@ -40,7 +40,7 @@ function F = Ffunc_bucket(h,h_n,k,psi,nodes,meshConfig,discretisationConsts)
 % Extract meshConfiguration variables
 deltas = meshConfig.deltas;
 Deltas = meshConfig.Deltas;
-DV = meshConfig.DV;
+DVs = meshConfig.DVs;
 K_vals = meshConfig.K_vals;
 quadMats = meshConfig.quadMats;
 
@@ -49,10 +49,10 @@ dt = discretisationConsts.dt;
 theta = discretisationConsts.theta;
 
 % Obtain Psi, flux and Q for h
-[Psi,flux] = FfuncVars_bucket(h,nodes,k,psi,K_vals,quadMats,DV,deltas,Deltas,discretisationConsts);
+[Psi,flux] = FfuncVars_bucket(h,nodes,k,psi,K_vals,quadMats,DVs,deltas,Deltas,discretisationConsts);
 
 % Obtain Psi, flux and Q for h_n
-[Psi_n,flux_n] = FfuncVars_bucket(h_n,nodes,k,psi,K_vals,quadMats,DV,deltas,Deltas,discretisationConsts);
+[Psi_n,flux_n] = FfuncVars_bucket(h_n,nodes,k,psi,K_vals,quadMats,DVs,deltas,Deltas,discretisationConsts);
 
 % Form F with Psi, G, Q, Psi_n, G_n, Q_n
 F = Psi - Psi_n + dt*((theta*flux + (1-theta)*flux_n));
