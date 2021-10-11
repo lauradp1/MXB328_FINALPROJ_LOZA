@@ -13,9 +13,6 @@ materials.landfill = landfill;
 c_r = [1,0.2];        % Refinement constants
 r = [1.2,1];          % Constants to determine spread of nodes (after refinement)
 numNodes = [8,20];    % Number of x and z nodes to add (after refinement)
-c_r = [0,0];
-r = [1,1];
-numNodes = [25,10];
 
 % Generate base mesh
 [nodes,refinements,meshLims,materialsPlot] = meshMaterialNodes(materials,c_r);
@@ -25,7 +22,7 @@ L2 = meshLims(2,2);
 
 % Fill mesh with some more nodes (xMin replaced with 20 as 0 to 20 is
 % already sufficiently populated with nodes)
-meshLims_temp = meshLims; %meshLims_temp(1,1) = 20;
+meshLims_temp = meshLims; meshLims_temp(1,1) = 20;
 [nodes_fill] = meshNodes(meshLims_temp,r,numNodes,refinements);
 xNodes = [xNodes nodes_fill{1}]; zNodes = [zNodes nodes_fill{2}];
 xNodes = sort(unique(xNodes))'; zNodes = sort(unique(zNodes))';
@@ -71,11 +68,11 @@ meshConfig.K_vals = K_vals;
 quadMats_p(quadMats_p==0) = 1;
 idxCorrection = repmat(0:Nmats:Nmats*N-1,Nmats,1)';
 quadMats_p = quadMats_p + idxCorrection;
-quadMats.quadMats = quadMats_p;
-quadMats.quadMats_e = circshift(quadMats_p,-Nz); quadMats.quadMats_e(end-Nz+1:end) = 1;
-quadMats.quadMats_w = circshift(quadMats_p,Nz); quadMats.quadMats_w(1:Nz) = 1;
-quadMats.quadMats_n = circshift(quadMats_p,-1); quadMats.quadMats_n(Nz:Nz:end) = 1;
-quadMats.quadMats_s = circshift(quadMats_p,1); quadMats.quadMats_s(1:Nz:end) = 1;
+quadMats.quadMats_p = quadMats_p;
+quadMats.quadMats_e = circshift(quadMats_p,-Nz)-Nz; quadMats.quadMats_e(end-Nz+1:end,:) = 1;
+quadMats.quadMats_w = circshift(quadMats_p,Nz)+Nz; quadMats.quadMats_w(1:Nz,:) = 1;
+quadMats.quadMats_n = circshift(quadMats_p,-1)-1; quadMats.quadMats_n(Nz:Nz:end,:) = 1; quadMats.quadMats_n(end,:) = 1;
+quadMats.quadMats_s = circshift(quadMats_p,1)+1; quadMats.quadMats_s(1:Nz:end,:) = 1; quadMats.quadMats_n(1,:) = 1;
 meshConfig.quadMats = quadMats;
 
 % Collate nodes
@@ -111,7 +108,8 @@ optionsGMRES.maxiters = 300;
 optionsGMRES.precond = 'Jacobi'; % Jacobi or Gauss-Seidel
 
 % Collate Jacobian constants
-optionsJacobian.var = 0;
+optionsJacobian.Nx = Nx;
+optionsJacobian.Nz = Nz;
 
 % Collate all options and constants for Newton-Krylov
 options.Newton = optionsNewton;
@@ -137,10 +135,10 @@ for t_n = 2:length(t)
     
     % Save psi and S values of previous time-step
     psi_h_n = psi(h_n)';
-    psi_h_n = sum((psi_h_n(quadMats).*DVs.DV),2) ./ Deltas.xz;
+    psi_h_n = sum((psi_h_n(quadMats_p).*DVs.DV),2) ./ Deltas.xz;
     psi_solved(:,:,t_n-1) = reshape(psi_h_n,[Nz,Nx]);
     S_h_n = S(h_n)';
-    S_h_n = sum((S_h_n(quadMats).*DVs.DV),2) ./ Deltas.xz;
+    S_h_n = sum((S_h_n(quadMats_p).*DVs.DV),2) ./ Deltas.xz;
     S_solved(:,:,t_n-1) = reshape(S_h_n,[Nz,Nx]);
     
     % Plot the previous time solution and store the values as vector

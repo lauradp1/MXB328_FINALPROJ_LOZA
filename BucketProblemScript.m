@@ -67,7 +67,6 @@ quadMats.quadMats_e = circshift(quadMats_p,-Nz)-Nz; quadMats.quadMats_e(end-Nz+1
 quadMats.quadMats_w = circshift(quadMats_p,Nz)+Nz; quadMats.quadMats_w(1:Nz,:) = 1;
 quadMats.quadMats_n = circshift(quadMats_p,-1)-1; quadMats.quadMats_n(Nz:Nz:end,:) = 1; quadMats.quadMats_n(end,:) = 1;
 quadMats.quadMats_s = circshift(quadMats_p,1)+1; quadMats.quadMats_s(1:Nz:end,:) = 1; quadMats.quadMats_n(1,:) = 1;
-
 meshConfig.quadMats = quadMats;
 
 % Collate nodes
@@ -86,8 +85,8 @@ discretisationConsts.q_rain = 0.005; % just a random constant choice
 
 % Collate Newton method constants
 optionsNewton.m = 1;
-optionsNewton.atol = 1e-10;
-optionsNewton.rtol = 1e-10;
+optionsNewton.atol = 1e-6;
+optionsNewton.rtol = 1e-6;
 optionsNewton.maxiters = 300;
 
 % Collate Line Searching constants
@@ -165,7 +164,7 @@ for t_n = 2:length(t)
     solutionPlot(4) = subplot(2,3,[4,5,6]);
     plot(t(1:t_n-1),avgSatsModel(1:t_n-1),'r')
     hold on
-    plot(t(1:t_n-1),avgSatsMeasured(1:t_n-1),'b');
+    plot(t(1:t_n-1),avgSatsMeasured(1:t_n-1),'b--');
     hold off
 %     ylim([0,1])
     title("average water content at time-step " + num2str(t(t_n-1)));
