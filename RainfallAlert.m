@@ -3,8 +3,10 @@ rainfall = readtable('MackayAlert.csv');
 %% Remove unneccesary columns and convert to matrix
 rainfall(:,[1,2,7,8]) = [];
 rainfall = table2array(rainfall);
+rainfall2 = rainfall;
 %% Remove all other years outside of 2012-2020
 rainfall = rainfall(rainfall(:,1)<2021 & rainfall(:,1)>=2012,:);
+rainfall2 = rainfall2(rainfall2(:,1) == 2011,:);
 %% Change format of data
 years = unique(rainfall(:,1));
 rainfallData = zeros(366,length(years));
@@ -70,23 +72,20 @@ rainfallTemp(isnan(rainfallTemp))=0;
 average = (rainfallTemp(:,1)+rainfallTemp(:,2)+rainfallTemp(:,3)+ ... 
     rainfallTemp(:,4)+rainfallTemp(:,5)+rainfallTemp(:,6)+rainfallTemp(:,7)...
     +rainfallTemp(:,8)+rainfallTemp(:,9))/9;
-
-%%
+%% Average rainfall plot
 figure;
 plot(average)
 title('Rainfall Averaged over 8 Years','FontSize',24,'Interpreter','LaTeX')
 xlabel('Time (days)','FontSize',20,'Interpreter','LaTeX')
 xlim([0 366])
 ylabel('Rainfall (mm)','FontSize',20,'Interpreter','LaTeX')
-
-max(average);
 %% Fourier Calculation
 t = linspace(1,366,366); 
 N = 10;
 %%
 z = isnan(rainfallData(:,1));
 index = find(z==1);
-k = rainfallData(:,1)
+k = rainfallData(:,1);
 k(z) = [];
 t(z) = [];
 %%
@@ -103,11 +102,9 @@ plot(t, s_approx)
 %%
 [a0, an, bn, s_approx, T] = trigFS(rainfallData(:,1)', t, N);
 %%
-
 for i = 1:size(rainfallData,2)
     [a0(i), an(i), bn(i), s_approx(i), T(i)] = trigFS(rainfallData(:,i)', t, N);
 end
-
 %% FUNCTION
 function [a0, an, bn, s_approx, T] = trigFS(s_hinf, t, N)
     Ts = t(2) - t(1);
