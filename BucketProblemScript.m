@@ -63,14 +63,10 @@ quadMats_p(quadMats_p==0) = 1;
 idxCorrection = repmat(0:Nmats:Nmats*N-1,Nmats,1)';
 quadMats_p = quadMats_p + idxCorrection;
 quadMats.quadMats_p = quadMats_p;
-quadMats.quadMats_e = quadMats_p;
-quadMats.quadMats_w = quadMats_p;
-quadMats.quadMats_n = quadMats_p;
-quadMats.quadMats_s = quadMats_p;
-% quadMats.quadMats_e = circshift(quadMats_p,-Nz); quadMats.quadMats_e(end-Nz+1:end,:) = 1;
-% quadMats.quadMats_w = circshift(quadMats_p,Nz); quadMats.quadMats_w(1:Nz,:) = 1;
-% quadMats.quadMats_n = circshift(quadMats_p,-1); quadMats.quadMats_n(Nz:Nz:end,:) = 1;
-% quadMats.quadMats_s = circshift(quadMats_p,1); quadMats.quadMats_s(1:Nz:end,:) = 1;
+quadMats.quadMats_e = circshift(quadMats_p,-Nz)-Nz; quadMats.quadMats_e(end-Nz+1:end,:) = 1;
+quadMats.quadMats_w = circshift(quadMats_p,Nz)+Nz; quadMats.quadMats_w(1:Nz,:) = 1;
+quadMats.quadMats_n = circshift(quadMats_p,-1)-1; quadMats.quadMats_n(Nz:Nz:end,:) = 1; quadMats.quadMats_n(end,:) = 1;
+quadMats.quadMats_s = circshift(quadMats_p,1)+1; quadMats.quadMats_s(1:Nz:end,:) = 1; quadMats.quadMats_n(1,:) = 1;
 
 meshConfig.quadMats = quadMats;
 
