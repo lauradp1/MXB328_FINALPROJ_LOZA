@@ -47,6 +47,7 @@ constants.m = 1-1/constants.n;
 constants.l = [1.5,3];
 constants.R = [0.1,0.2];
 constants.L = [L1,L2];
+constants.creekLims = [0,0];
 
 % Compute time-independent variables
 [K_vals,S,k,psi,Q,deltas,Deltas,DVs,quadMats_p] = nodeConstants2D(materials,constants,xNodes,zNodes);
@@ -61,12 +62,12 @@ meshConfig.K_vals = K_vals;
 % These edits will not affect computation as DV is 0 where quadMats is 0
 quadMats_p(quadMats_p==0) = 1;
 idxCorrection = repmat(0:Nmats:Nmats*N-1,Nmats,1)';
+quadMats.quadMats_p = quadMats_p + idxCorrection;
+quadMats.quadMats_e = circshift(quadMats_p,-Nz) + idxCorrection;
+quadMats.quadMats_w = circshift(quadMats_p,Nz) + idxCorrection;
+quadMats.quadMats_n = circshift(quadMats_p,-1) + idxCorrection;
+quadMats.quadMats_s = circshift(quadMats_p,1) + idxCorrection;
 quadMats_p = quadMats_p + idxCorrection;
-quadMats.quadMats_p = quadMats_p;
-quadMats.quadMats_e = circshift(quadMats_p,-Nz)-Nz; quadMats.quadMats_e(end-Nz+1:end,:) = 1;
-quadMats.quadMats_w = circshift(quadMats_p,Nz)+Nz; quadMats.quadMats_w(1:Nz,:) = 1;
-quadMats.quadMats_n = circshift(quadMats_p,-1)-1; quadMats.quadMats_n(Nz:Nz:end,:) = 1; quadMats.quadMats_n(end,:) = 1;
-quadMats.quadMats_s = circshift(quadMats_p,1)+1; quadMats.quadMats_s(1:Nz:end,:) = 1; quadMats.quadMats_n(1,:) = 1;
 meshConfig.quadMats = quadMats;
 
 % Collate nodes
@@ -80,22 +81,22 @@ dt = t(2)-t(1);
 
 % Collate discretisation constants
 discretisationConsts.dt = dt;
-discretisationConsts.theta = 0.5;
+discretisationConsts.theta = 1;
 discretisationConsts.q_rain = 0.005; % just a random constant choice
 
 % Collate Newton method constants
 optionsNewton.m = 1;
 optionsNewton.atol = 1e-6;
 optionsNewton.rtol = 1e-6;
-optionsNewton.maxiters = 300;
+optionsNewton.maxiters = 100;
 
 % Collate Line Searching constants
 optionsLineSearching.dev = 1e-4;
 
 % Collate GMRES constants
-optionsGMRES.atol = 1e-10;
-optionsGMRES.rtol = 1e-10;
-optionsGMRES.maxiters = 300;
+optionsGMRES.atol = 1e-8;
+optionsGMRES.rtol = 1e-8;
+optionsGMRES.maxiters = 50;
 optionsGMRES.precond = 'Jacobi'; % Jacobi or Gauss-Seidel
 
 % Collate Jacobian constants
@@ -139,21 +140,21 @@ for t_n = 2:length(t)
     % Plot the previous time solution and store the values as vector
     % heads
     solutionPlot(1) = subplot(2,3,1);
-    surf(xNodes,zNodes,h_solved(:,:,t_n-1));
+    contourf(xNodes,zNodes,h_solved(:,:,t_n-1));
     view(2)
     colormap(solutionPlot(1),flipud(autumn))
     shading interp;
     colorbar
     % water content
     solutionPlot(2) = subplot(2,3,2);
-    surf(xNodes,zNodes,psi_solved(:,:,t_n-1));
+    contourf(xNodes,zNodes,psi_solved(:,:,t_n-1));
     view(2)
     colormap(solutionPlot(2),flipud(winter))
     shading interp;
     colorbar
     % saturation
     solutionPlot(3) = subplot(2,3,3);
-    surf(xNodes,zNodes,S_solved(:,:,t_n-1));
+    contourf(xNodes,zNodes,S_solved(:,:,t_n-1));
     view(2)
     colormap(solutionPlot(3),cool)
     shading interp;

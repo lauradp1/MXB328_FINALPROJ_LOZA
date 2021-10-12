@@ -46,6 +46,8 @@ m = constants.m;
 l = constants.l; l1 = l(1); l2 = l(2);
 R = constants.R; R1 = R(1); R2 = R(2);
 L = constants.L; L1 = L(1); L2 = L(2);
+creekLims = constants.creekLims;
+creekBot = creekLims(1); creekTop = creekLims(2);
 matNames = fieldnames(materials); % Material names
 
 % Generate S(h), k(h), psi(h) for each material
@@ -58,14 +60,15 @@ x_vals = repmat(xNodes',Nz,1); z_vals = repmat(zNodes',Nx,1)';
 node_vals = x_vals; node_vals(:,:,2) = z_vals;
 node_vals = reshape(node_vals,[N,2]);
 x = node_vals(:,1); z = node_vals(:,2);
-Q = (0<=x & x<=15 & (L2-l1)<=z & z<=L2).*((L2-l1<=z & z<=L2).*(-R1*(z-L2+l1).^2)/(l1^2)) + ...
-    (15<x & x<=L1 & (L2-l2)<=z & z<=L2).*((L2-l2<=z & z<=L2).*(-R2*(z-L2+l2).^2)/(l2^2));
+% SOMETHING POTENTIALLY WRONG HERE
+Q = @(q_rain) (0<=x & x<=15 & (L2-l1)<=z & z<=L2).*((L2-l1<=z & z<=L2).*(-R1*q_rain*(z-L2+l1).^2)/(l1^2)) + ...
+    (15<x & x<=L1 & (L2-l2)<=z & z<=L2).*((L2-l2<=z & z<=L2).*(-R2*q_rain*(z-L2+l2).^2)/(l2^2));
 
 % Iterate through each node and calculate time-independant values e.g. Kxx
 % and Kzz approximations to use at each node East, West, North and South
 K = zeros(Nz,Nx,4); % 4:Kxx_east,Kxx_west,Kzz_north,Kzz_south
 delta = zeros(Nz,Nx,4); % 4:dx_east,dx_west,dz_north,dz_south
-Delta = zeros(Nz,Nx,2); % 2:Deltax_p,Deltaz_p
+Delta = zeros(Nz,Nx,3); % 2:Deltax_p,Deltaz_p,Deltaz_creek
 DV = zeros(Nz,Nx,4); % 4:DV_quadrant1,DV_quadrant2,...
 quadMats = zeros(Nz,Nx,4);
 for i = 1:Nx
@@ -82,7 +85,10 @@ for i = 1:Nx
         % Compute deltax and deltaz values for East, West, North and South
         delta(j,i,:) = [x_e-x_i,x_i-x_w,z_n-z_i,z_i-z_s];
         % Compute Deltax and Deltaz
-        Delta(j,i,:) = [(delta(j,i,east)+delta(j,i,west))/2,(delta(j,i,north)+delta(j,i,south))/2];
+        Delta(j,i,1:2) = [(delta(j,i,east)+delta(j,i,west))/2,(delta(j,i,north)+delta(j,i,south))/2];
+        Delta(j,i,3) = (z_i>=creekBot & z_s<creekBot)*delta(j,i,north)/2 + ...
+                       (z_i<=creekTop & z_n>creekTop)*delta(j,i,south)/2 + ...
+                       (z_i>creekBot & z_s>=creekBot & z_i<creekTop & z_n<=creekTop)*Delta(j,i,2);
         
         % Determine Kxx and Kzz for each quadrant (find material of each
         % corner of the current node domain Vp
@@ -146,6 +152,7 @@ deltas.south = reshape(delta(:,:,4),[N,1]);
 Deltas.x = reshape(Delta(:,:,1),[N,1]);
 Deltas.x_n = circshift(Deltas.x,-1); % This will be used for north boundary
 Deltas.z = reshape(Delta(:,:,2),[N,1]);
+Deltas.creek = reshape(Delta(:,:,3),[N,1]);
 
 Deltas.xz = Deltas.x .* Deltas.z;
 Deltas.xz_e = circshift(Deltas.xz,-Nz); Deltas.xz_e(end-Nz+1:end) = NaN;

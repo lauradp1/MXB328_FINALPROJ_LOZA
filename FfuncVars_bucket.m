@@ -13,7 +13,7 @@ K_w = K_vals.west;
 K_n = K_vals.north;
 K_s = K_vals.south;
 
-Delta_x_n = Deltas.x_n;
+Delta_x = Deltas.x;
 Delta_xz = Deltas.xz;
 Delta_xz_e = Deltas.xz_e;
 Delta_xz_w = Deltas.xz_w;
@@ -78,7 +78,7 @@ q_s = k_s .* K_s .* (H - H_s) ./ delta_s;
 % Apply boundary conditions
 q_e(isnan(q_e)) = 0;
 q_w(isnan(q_w)) = 0;
-q_n(isnan(q_n)) = -q_rain * Delta_x_n(isnan(q_n));
+q_n(isnan(q_n)) = -q_rain * Delta_x(isnan(q_n));
 q_s(isnan(q_s)) = 0;
 
 % Form G, Q and Psi

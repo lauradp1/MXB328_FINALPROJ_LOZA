@@ -16,8 +16,8 @@ K_w = K_vals.west;
 K_n = K_vals.north;
 K_s = K_vals.south;
 
-Delta_x = Deltas.x; Delta_x_n = circshift(Delta_x,-1);
-Delta_z = Deltas.z; 
+Delta_x = Deltas.x;
+Delta_creek = Deltas.creek;
 Delta_xz = Deltas.xz;
 Delta_xz_e = Deltas.xz_e;
 Delta_xz_w = Deltas.xz_w;
@@ -28,6 +28,18 @@ delta_e = deltas.east;
 delta_w = deltas.west;
 delta_n = deltas.north;
 delta_s = deltas.south;
+
+DV = DVs.DV;
+DV_e = DVs.DV_e;
+DV_w = DVs.DV_w;
+DV_n = DVs.DV_n;
+DV_s = DVs.DV_s;
+
+quadMats_p = quadMats.quadMats_p;
+quadMats_e = quadMats.quadMats_e;
+quadMats_w = quadMats.quadMats_w;
+quadMats_n = quadMats.quadMats_n;
+quadMats_s = quadMats.quadMats_s;
 
 % Vectors containing neighbouring heads
 h_e = circshift(h,-Nz); h_e(end-Nz+1:end) = NaN;
@@ -41,19 +53,6 @@ H_e = circshift(H,-Nz); H_e(end-Nz+1:end) = NaN;
 H_w = circshift(H,Nz); H_w(1:Nz) = NaN;
 H_n = circshift(H,-1); H_n(Nz:Nz:end) = NaN;
 H_s = circshift(H,1); H_s(1:Nz:end) = NaN;
-
-% Generate shifted arrays for DV
-DV = DVs.DV;
-DV_e = DVs.DV_e;
-DV_w = DVs.DV_w;
-DV_n = DVs.DV_n;
-DV_s = DVs.DV_s;
-
-quadMats_p = quadMats.quadMats_p;
-quadMats_e = quadMats.quadMats_e;
-quadMats_w = quadMats.quadMats_w;
-quadMats_n = quadMats.quadMats_n;
-quadMats_s = quadMats.quadMats_s;
 
 % Sigma values for each node in each direction
 sigma_e = (H<H_e);
@@ -82,13 +81,11 @@ q_s = k_s .* K_s .* (H - H_s) ./ delta_s;
 % Apply boundary conditions
 q_e(isnan(q_e)) = 0;
 q_w(isnan(q_w)) = (3<=z & z<=5 & H(1:Nz)>Hc) .* (Kc*(Hc - H(1:Nz))/Xc) ...
-                    .* Delta_z(1:Nz);
-q_n(isnan(q_n)) = -q_rain * Delta_x_n(isnan(q_n));
+                    .* Delta_creek(1:Nz);
+q_n(isnan(q_n)) = -q_rain * Delta_x(isnan(q_n));
 q_s(isnan(q_s)) = 0;
 
-% Form G, Q and Psi
-% need to form a Nx*Nz by 4 (because 4 mats) array containing index of
-% material needed at each node for k(h) and psi(h)
+% Form flux, Psi and Q
 flux = (q_e + q_w + q_n + q_s) ./ (Delta_xz);
 
 psi_h = psi(h)';
@@ -96,7 +93,9 @@ Psi = sum((psi_h(quadMats_p).*DV),2) ./ Delta_xz;
 
 psi_sat = psi(zeros(Nx*Nz,1))';
 Psi_sat = sum((psi_sat(quadMats_p).*DV),2) ./ Delta_xz;
-Q = ((Psi./Psi_sat) > 0.5) .* Q_p;
+Q = ((Psi./Psi_sat) > 0.5) .* Q_p(q_rain);
+
+%Q = zeros(Nx*Nz,1);
 
 end
 

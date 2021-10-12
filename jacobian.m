@@ -4,7 +4,7 @@ function J = jacobian(h_n,F,F_k,options)
 % 
 % [Nz,Nx] = size(h_n);
 % N = Nx*Nz;
-% J1 = zeros(N,N);     % Initialise J
+% J = zeros(N,N);     % Initialise J
 % I = eye(N);
 % % Variables
 % norm_hn = norm(h_n,2);
@@ -18,7 +18,7 @@ function J = jacobian(h_n,F,F_k,options)
 % % Approximate J
 % for j = 1:N
 %     % determine J at current j
-%     J1(:,j) = (F(h_n + epsilon*I(:,j)) - F_k)/epsilon;
+%     J(:,j) = (F(h_n + epsilon*I(:,j)) - F_k)/epsilon;
 % end
 
 %% BANDED
@@ -29,7 +29,7 @@ N = Nx*Nz;
 % I = eye(N);
 % Variables
 norm_hn = norm(h_n,2);
-BW = 2*Nx +1;
+BW = 2*Nz +1;
 s_j = zeros(BW,N);
 for ii = 1:BW
     s_j(ii,ii:BW:N) = 1;
