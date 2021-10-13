@@ -17,7 +17,7 @@ for Average = 1:length(years)
     rainfallData(:,Average) = yearData;
 end
 % Averaging the Data
-rainfallTemp = rainfallData(:,[1:9]);
+rainfallTemp = rainfallData(:,[2:10]);
 T = rainfallTemp';
 average = mean(T,'omitnan')';
 % Replacing Nans with Averages
@@ -33,16 +33,35 @@ title('Rainfall Averaged from 2012 to 2020','FontSize',24,'Interpreter','LaTeX')
 xlabel('Time (days)','FontSize',20,'Interpreter','LaTeX')
 xlim([0 366])
 ylabel('Rainfall (mm)','FontSize',20,'Interpreter','LaTeX')
+%% Cosine Approximation
+rf = max(average);
+t = linspace(1,366,366);
+q_rain = rf + rf*cos(2*pi*t/366); % [mm/day] period of 366 days
+figure
+plot(t, q_rain)
 %% Fourier Calculation
 % For average rainfall vector
 t = linspace(1,366,366);
-N = 75;
+N = 50;
 k = average;
 [a0, an, bn, s_approx, T] = trigFS(k', t, N);
 below_0 = s_approx<0;
 s_approx(below_0) =0;
-figure
-plot(t, s_approx)
+%figure
+%plot(t, s_approx)
+%% Average Plot with Fourier Approximation
+t = linspace(1,366,366);
+figure;
+plot(t,average,'LineWidth',2)
+hold on
+plot(t,s_approx,'r--','LineWidth',2)
+title('Rainfall Averaged from 2012 to 2020','FontSize',24,'Interpreter','LaTeX')
+xlabel('Time (days)','FontSize',20,'Interpreter','LaTeX')
+xlim([0 366])
+ylabel('Rainfall (mm)','FontSize',20,'Interpreter','LaTeX')
+lgd = legend('Averaged Data','Fourier Approximation');
+lgd.Interpreter = 'LaTeX';
+lgd.FontSize = 16;
 %% Function 
 %s = @(t) a0/2 + sum(an*cos(n*t) + bn*sin(n*t))
 syms n 
