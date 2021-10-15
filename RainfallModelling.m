@@ -35,10 +35,12 @@ xlim([0 366])
 ylabel('Rainfall (mm)','FontSize',20,'Interpreter','LaTeX')
 %% Cosine Approximation
 rf = max(average);
-t = linspace(1,366,366);
-q_rain = rf + rf*cos(2*pi*t/366); % [mm/day] period of 366 days
+syms t
+%t = linspace(1,366,366);
+cosineRain = @(t) rf + rf*cos(2*pi*t/366); % [mm/day] period of 366 days
 figure
-plot(t, q_rain)
+fplot(cosineRain,[0 366])
+
 %% Fourier Calculation
 % For average rainfall vector
 t = linspace(1,366,366);
