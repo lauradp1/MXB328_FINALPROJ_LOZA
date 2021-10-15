@@ -34,7 +34,8 @@ norm_Fk = norm(F_k,2);
 norm_F0 = norm_Fk;
 h_k = h_n;
 k_GMRES = 0;
-converged = true;
+converged = false;
+h = zeros(length(h_n),1);
 
 % Perform Newton iterations until convergence
 for k_newton = 1:maxiters
@@ -48,9 +49,8 @@ for k_newton = 1:maxiters
     if isequal(newtonStepMethod, 'backslash')
         delta_h = -J(h_k)\F_k;
     elseif isequal(newtonStepMethod, 'GMRES')
-        [delta_h,k_GMRES] = GMRES(-J(h_k),F_k,h_k,optionsGMRES);
+        [delta_h,k_GMRES,~] = gmres_pre(-J(h_k),F_k,h_k,optionsGMRES);
         if isequal(delta_h,[])
-            converged = false;
             break;
         end
     else
@@ -65,7 +65,6 @@ for k_newton = 1:maxiters
     end
     
     if lambda == -1
-        converged = false;
         break;
     else
         % Accept Newton iteration
@@ -77,6 +76,7 @@ for k_newton = 1:maxiters
     % Check for convergence
     if norm_Fk <= rtol*norm_F0 + atol
         h = h_k;
+        converged = true;
         break;
     end
 end
