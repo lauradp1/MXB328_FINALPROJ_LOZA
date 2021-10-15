@@ -147,6 +147,7 @@ for t_n = 2:length(t)
     colormap(solutionPlot(1),flipud(autumn))
     shading interp;
     colorbar
+    title('heads, h')
     % water content
     solutionPlot(2) = subplot(2,3,2);
     contourf(xNodes,zNodes,psi_solved(:,:,t_n-1));
@@ -154,6 +155,7 @@ for t_n = 2:length(t)
     colormap(solutionPlot(2),flipud(winter))
     shading interp;
     colorbar
+    title('water content, psi')
     % saturation
     solutionPlot(3) = subplot(2,3,3);
     contourf(xNodes,zNodes,S_solved(:,:,t_n-1));
@@ -161,6 +163,7 @@ for t_n = 2:length(t)
     colormap(solutionPlot(3),cool)
     shading interp;
     colorbar
+    title('saturation, S')
     % average water content (moisture)
     avgSatsMeasured(t_n-1) = sum(psi_h_n .* Deltas.xz)/(L1*L2);
     avgSatsModel(t_n-1) = (discretisationConsts.q_rain/L2)*t(t_n-1) + avgSat0;
