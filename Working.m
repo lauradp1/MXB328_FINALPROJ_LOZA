@@ -98,6 +98,7 @@ optionsNewton.m = 1;
 optionsNewton.atol = 1e-6;
 optionsNewton.rtol = 1e-6;
 optionsNewton.maxiters = 100;
+optionsNewton.newtonStepMethod = 'backslash'; % GMRES, backslash
 
 % Collate Line Searching constants
 optionsLineSearching.dev = 1e-4;
@@ -111,6 +112,7 @@ optionsGMRES.precond = 'Jacobi'; % Jacobi or Gauss-Seidel
 % Collate Jacobian constants
 optionsJacobian.Nx = Nx;
 optionsJacobian.Nz = Nz;
+optionsJacobian.method = 'banded'; % banded, column-wise, jacobian-free
 
 % Collate all options and constants for Newton-Krylov
 options.Newton = optionsNewton;
@@ -154,7 +156,7 @@ for t_n = 2:length(t)
     solutionPlot(2) = subplot(2,3,2);
     contourf(xNodes,zNodes,psi_solved(:,:,t_n-1));
     view(2)
-    colormap(solutionPlot(2),winter)
+    colormap(solutionPlot(2),flipud(winter))
     shading interp;
     colorbar
     % saturation
@@ -168,9 +170,16 @@ for t_n = 2:length(t)
     avgSatsMeasured(t_n-1) = sum(psi_h_n .* Deltas.xz)/(L1*L2);
     solutionPlot(4) = subplot(2,3,[4,5,6]);
     plot(t(1:t_n-1),avgSatsMeasured(1:t_n-1),'b');
-    ylim([0,0.5])
     title("average water content at time-step " + num2str(t_n-1));
     drawnow;
+    
+    % Implement adaptive time-stepping
+    % if k > k_max or if newton_krylov fails then decrease time-step and
+    % retry
+    % need to have an undefined t vector that is updated based on the
+    % time-step used to obtain convergence
+    % redo this loop to while t < t_max and populate a growing solution
+    % array and a corresponding t vector for each dt that is chosen
     
     % Form F for current time-step
     F = @(h) Ffunc(h,h_n,k,psi,Q,nodes,meshConfig,discretisationConsts);
@@ -182,6 +191,128 @@ for t_n = 2:length(t)
     h_solved(:,:,t_n) = reshape(h_n,[Nz,Nx]);
     
 end
+
+%%
+
+% t_max = 365*5;
+% dt = 1; % set as 1 day originally
+% dt_growthFactor = 0.25;
+% dt_max = 1.5;
+% dt_min = 0.25;
+% dt_consec = 0;
+% t = 0; % initialise t
+% t_vals = 0;
+% Ksc = 5;
+% Msc = 5;
+% Tsc = 5;
+% 
+% h_solved = -1 + ((-5 + 1)*repmat(zNodes',Nx,1)')/L2;
+% h_n = reshape(h_solved,[N,1]);
+% psi_h_n = psi(h_n)';
+% psi_h_n = sum((psi_h_n(quadMats_p).*DVs.DV),2) ./ Deltas.xz;
+% psi_solved = reshape(psi_h_n,[Nz,Nx]);
+% S_h_n = S(h_n)';
+% S_h_n = sum((S_h_n(quadMats_p).*DVs.DV),2) ./ Deltas.xz;
+% S_solved = reshape(S_h_n,[Nz,Nx]);
+% avgSatsMeasured = sum(psi_h_n .* Deltas.xz)/(L1*L2);
+% 
+% % Plot solutions at current time-step
+% solutionPlot(1) = subplot(2,3,1);
+% contourf(xNodes,zNodes,h_solved(:,:,end));
+% view(2)
+% colormap(solutionPlot(1),flipud(autumn))
+% shading interp;
+% colorbar
+% % water content
+% solutionPlot(2) = subplot(2,3,2);
+% contourf(xNodes,zNodes,psi_solved(:,:,end));
+% view(2)
+% colormap(solutionPlot(2),flipud(winter))
+% shading interp;
+% colorbar
+% % saturation
+% solutionPlot(3) = subplot(2,3,3);
+% contourf(xNodes,zNodes,S_solved(:,:,end));
+% view(2)
+% colormap(solutionPlot(3),cool)
+% shading interp;
+% colorbar
+% % average water content (moisture)
+% solutionPlot(4) = subplot(2,3,[4,5,6]);
+% plot(t_vals,avgSatsMeasured,'b');
+% ylim([0,0.5])
+% title("average water content at time " + num2str(t_vals(end)) + " (dt = " + num2str(dt) + ")");
+% drawnow;
+% 
+% while t + dt < t_max
+%     % t = t + dt;
+%     converged = false;
+%     dt_consec = dt_consec + 1;
+%     % keep trying until a dt results in a successful convergence
+%     while ~converged
+%         discretisationConsts.dt = dt;
+%         % Form F for current time-step
+%         F = @(h) Ffunc(h,h_n,k,psi,Q,nodes,meshConfig,discretisationConsts);
+%         % Obtain h for current time-step with Newton-Krylov
+%         [h_n,newtonConverged,k_newton,k_GMRES] = newton_krylov(h_n,F,options);
+%         if isequal(optionsNewton.newtonStepMethod,'backslash'); k_GMRES = Msc; end
+%         % Determine if dt should be changed
+%         if ~newtonConverged
+%             if dt/2 <= dt_min
+%                 error("Minimum dt reached");
+%             else
+%                 dt = dt/2;
+%                 dt_consec = 0;
+%             end
+%         elseif k_newton <= Ksc && k_GMRES <= Msc && dt_consec > Tsc
+%             if dt+dt_growthFactor < dt_max
+%                 dt = dt+dt_growthFactor;
+%                 dt_consec = 0;
+%             end
+%             converged = true;
+%         else
+%             converged = true;
+%         end
+%     end
+%     t_vals(end+1) = t + dt;
+%     
+%     % Save h, psi and S values of current time-step
+%     h_solved(:,:,end+1) = reshape(h_n,[Nz,Nx]);
+%     psi_h_n = psi(h_n)';
+%     psi_h_n = sum((psi_h_n(quadMats_p).*DVs.DV),2) ./ Deltas.xz;
+%     psi_solved(:,:,end+1) = reshape(psi_h_n,[Nz,Nx]);
+%     S_h_n = S(h_n)';
+%     S_h_n = sum((S_h_n(quadMats_p).*DVs.DV),2) ./ Deltas.xz;
+%     S_solved(:,:,end+1) = reshape(S_h_n,[Nz,Nx]);
+%     
+%     % Plot solutions at current time-step
+%     solutionPlot(1) = subplot(2,3,1);
+%     contourf(xNodes,zNodes,h_solved(:,:,end));
+%     view(2)
+%     colormap(solutionPlot(1),flipud(autumn))
+%     shading interp;
+%     colorbar
+%     % water content
+%     solutionPlot(2) = subplot(2,3,2);
+%     contourf(xNodes,zNodes,psi_solved(:,:,end));
+%     view(2)
+%     colormap(solutionPlot(2),flipud(winter))
+%     shading interp;
+%     colorbar
+%     % saturation
+%     solutionPlot(3) = subplot(2,3,3);
+%     contourf(xNodes,zNodes,S_solved(:,:,end));
+%     view(2)
+%     colormap(solutionPlot(3),cool)
+%     shading interp;
+%     colorbar
+%     % average water content (moisture)
+%     avgSatsMeasured(end+1) = sum(psi_h_n .* Deltas.xz)/(L1*L2);
+%     solutionPlot(4) = subplot(2,3,[4,5,6]);
+%     plot(t_vals,avgSatsMeasured,'b');
+%     title("average water content at time " + num2str(t_vals(end)) + " (dt = " + num2str(dt) + ")");
+%     drawnow;
+% end
 
 % water table won't necessarily sit on the nodes - likely will be somewhere
 % in the node control volume and need to determine it from pressure values

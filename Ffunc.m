@@ -10,30 +10,32 @@ function F = Ffunc(h,h_n,k,psi,Q_p,nodes,meshConfig,discretisationConsts)
 %   psi: function handle vector of length no. of materials with h as input
 %        and outputs the value of psi for each material in same order as
 %        the keys/names of the materials
-%   Q: function handle with x and z as input and outputs evapotranspiration
-%      term at the given x and z position
-%   q_rain: value of the rainfall flux at current time-step
+%   Q_p: function handle with q_rain constant as input and outputs vector
+%        corresponding to evapotranspiration term at each node
 %   nodes: structure containing xNodes and zNodes for the mesh
 %   meshConfig: structure containing arrays relating to different aspects
 %               of the mesh:
-%           - delta: Nx by Nz by 4 array containing values for delta_east,
-%                    delta_west, ... at every node
-%           - Delta: Nx by Nz by 2 array containing the values for Delta_x
-%                    and Delta_z at every node
-%           - DV: Nx by Nz by 4 array containing values for the areas of
-%                 each quadrant V_SCV surrounding every node
-%           - quadMats: Nx by Nz by 4 string array containing the materials
-%                       of each quadrant surrounding every node
-%           - matNames: cell array containing material names as strings
-%           - K: Nx by Nz by 4 array containing the Kxx and Kzz 
-%                approximations for each node
+%           - deltas: structure containing delta vectors for east, west,
+%                     north and south nodes
+%           - Deltas: structure containing Delta vectors for x and z nodes
+%                     along with Delta_x.*Delta_z for nodes and east, west,
+%                     north and south nodes. Also Delta_creek for the creek
+%                     boundary condition
+%           - DVs: structure containing DV and DV shifted for east, west,
+%                  north and south nodes
+%           - K_vals: structure containing K  for east, west, north and
+%                     south nodes
+%           - quadMats: structure containing indexing arrays for which
+%                       materials are at which nodes along with the shifted
+%                       versions for east, west, north and south nodes
 %   discretisationConsts: structure containing constants relating to the
 %                         discretisation of Richard's PDE:
-%           - dt: value of one time-step
-%           - theta: 
+%           - dt: value of time-step
+%           - theta: theta method constant
 %           - Kc: hydraulic conductivity of the creek
 %           - Hc: total head of the creek
 %           - Xc: x-width of the creek
+%           - q_rain: value of the rainfall flux at current time-step
 % Outputs:
 %   F: Evaluation of F(u) = 0 for the 2-dimensional PDE of Richard's eqn
 

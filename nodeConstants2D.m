@@ -11,23 +11,28 @@ function [K_vals,S,k,psi,Q,deltas,Deltas,DVs,quadMats] = nodeConstants2D(materia
 %   xNodes: vector of x-values corresponding to the x-nodes
 %   zNodes: vector of z-values corresponding to the z-nodes
 % Outputs:
-%   K: Nx by Nz by 4 array containing the Kxx and Kzz approximations for
+%   K_vals: Nx by Nz by 4 array containing the Kxx and Kzz approximations for
 %      each node
+%   S: function handle vector of length no. of materials with h as input
+%      and outputs the value of S for each material in same order as the
+%      keys/names of the materials
 %   k: function handle vector of length no. of materials with h as input
 %      and outputs the value of k for each material in same order as the
 %      keys/names of the materials
 %   psi: function handle vector of length no. of materials with h as input
 %        and outputs the value of psi for each material in same order as
 %        the keys/names of the materials
-%   Q: function handle with x and z as input and outputs evapotranspiration
-%      term at the given x and z position
-%   delta: Nx by Nz by 2 by 2 array containing distances from each node to
-%          the surrounding nodes
-%   Delta: Nx by Nz by 2 array containing the length and height of each
-%          node domain Vp
-%   DV: Nx by Nz by 4 array containing areas of the 4 quadrants surrounding
-%       each node
-%   quadMats: Nx by Nz by 4 array containing the materials of the quadrants
+%   Q: function handle with q_rain as input and outputs evapotranspiration
+%      term at all nodes
+%   deltas: structure containing the deltas at each node shifted for east,
+%           west, north and south with delta being the distance from each
+%           node to the surrounding node
+%   Deltas: structure containing the Deltas for the x and z directions at
+%           each node and each shifted nodes along with Delta_xz and
+%           Delta_creek
+%   DVs: structure containing arrays corresponding to areas of quadrants
+%        surrounding each node along with each shifting of the nodes
+%   quadMats: Nx*Nz column vector containing the materials of the quadrants
 %             surrounding each node
 
 % Define readability constants
@@ -60,7 +65,6 @@ x_vals = repmat(xNodes',Nz,1); z_vals = repmat(zNodes',Nx,1)';
 node_vals = x_vals; node_vals(:,:,2) = z_vals;
 node_vals = reshape(node_vals,[N,2]);
 x = node_vals(:,1); z = node_vals(:,2);
-% SOMETHING POTENTIALLY WRONG HERE
 Q = @(q_rain) (0<=x & x<=15 & (L2-l1)<=z & z<=L2).*((L2-l1<=z & z<=L2).*(-R1*q_rain*(z-L2+l1).^2)/(l1^2)) + ...
     (15<x & x<=L1 & (L2-l2)<=z & z<=L2).*((L2-l2<=z & z<=L2).*(-R2*q_rain*(z-L2+l2).^2)/(l2^2));
 
@@ -150,10 +154,8 @@ deltas.north = reshape(delta(:,:,3),[N,1]);
 deltas.south = reshape(delta(:,:,4),[N,1]);
 
 Deltas.x = reshape(Delta(:,:,1),[N,1]);
-Deltas.x_n = circshift(Deltas.x,-1); % This will be used for north boundary
 Deltas.z = reshape(Delta(:,:,2),[N,1]);
 Deltas.creek = reshape(Delta(:,:,3),[N,1]);
-
 Deltas.xz = Deltas.x .* Deltas.z;
 Deltas.xz_e = circshift(Deltas.xz,-Nz); Deltas.xz_e(end-Nz+1:end) = NaN;
 Deltas.xz_w = circshift(Deltas.xz,Nz); Deltas.xz_w(1:Nz) = NaN;

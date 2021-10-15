@@ -1,4 +1,4 @@
-function x = GMRES(A,b,x0,options)
+function [x,m] = GMRES(A,b,x0,options)
 %UNTITLED7 Summary of this function goes here
 %   Detailed explanation goes here
 

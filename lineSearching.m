@@ -1,6 +1,18 @@
 function lambda = lineSearching(h,delta_h,F,norm_Fk,options)
-%UNTITLED6 Summary of this function goes here
-%   Detailed explanation goes here
+%LINESEARCHING 2-point parabolic linesearching computes a lambda such that
+%h + lambda*delta_h is sufficiently convergent
+% Inputs:
+%   h: solution vector for previous newton step
+%   delta_h: newton step vector
+%   F: function handle nonlinear system function that takes a h vector as
+%      input
+%   norm_Fk: norm of F(h) computed for this newton iteration
+%   options: structure containing linesearching constants:
+%            - dev: linesearching tolerance to prevent lambda tending to
+%                   zero
+% Outputs:
+%   lambda: constant used to define the approximate solution vector h = h +
+%           lambda*delta_h
 
 % Extract options and initialise norm
 dev = options.dev;
@@ -26,7 +38,8 @@ while norm_ls >= (1 - dev*lambda)*norm_Fk
     norm_ls = norm(F_k,2);
     
     if lambda < dev
-        error('Line searching aborted as lambda is less than dev');
+        lambda = -1;
+        break;
     end
 end
 
