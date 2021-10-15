@@ -1,14 +1,14 @@
-clear; close all; clc;
+%clear; close all; clc;
 
 %% Generate mesh
 
 % Define mesh materials
-materials.landfill = [0,10;0,15];
+materials.landfill = [0,21;0,31];
 
 % Define node generation constants
 c_r = [0,0];
 r = [1,1];
-numNodes = [10,15];
+numNodes = [21,31];
 
 % Generate base mesh
 [nodes,refinements,meshLims,materialsPlot] = meshMaterialNodes(materials,c_r);
@@ -76,13 +76,12 @@ nodes.xNodes = xNodes;
 nodes.zNodes = zNodes;
 
 % Define time range
-t = linspace(0,100,100);
+t = linspace(0,366,366);
 dt = t(2)-t(1);
 
 % Collate discretisation constants
 discretisationConsts.dt = dt;
 discretisationConsts.theta = 1;
-discretisationConsts.q_rain = 0.005; % just a random constant choice
 
 % Collate Newton method constants
 optionsNewton.m = 1;
@@ -129,6 +128,9 @@ avgSatsMeasured = zeros(length(t),1);
 
 for t_n = 2:length(t)
     
+    discretisationConsts.q_rain = cosineRain(t(t_n));
+
+    
     % Save psi and S values of previous time-step
     psi_h_n = psi(h_n)';
     psi_h_n = sum((psi_h_n(quadMats_p).*DVs.DV),2) ./ Deltas.xz;
@@ -170,6 +172,8 @@ for t_n = 2:length(t)
 %     ylim([0,1])
     title("average water content at time-step " + num2str(t(t_n-1)));
     drawnow;
+    
+    
     
     % Form F for current time-step
     F = @(h) Ffunc_bucket(h,h_n,k,psi,nodes,meshConfig,discretisationConsts);
