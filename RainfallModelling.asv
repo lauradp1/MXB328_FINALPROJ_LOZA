@@ -21,7 +21,7 @@ rainfallTemp = rainfallData(:,[2:10]);
 T = rainfallTemp';
 average = mean(T,'omitnan')';
 averageDaily = mean(average);
-r_f = averageDaily*10^(-3);
+r_f = averageDaily
 % Replacing Nans with Averages
 RainfallModel = rainfallData;
 for j = 1:length(years)
@@ -36,12 +36,12 @@ xlabel('Time (days)','FontSize',20,'Interpreter','LaTeX')
 xlim([0 366])
 ylabel('Rainfall (mm)','FontSize',20,'Interpreter','LaTeX')
 %% Cosine Approximation
-rf = r_f;
+rf = max(average)*10^(-3);
 syms t
 %t = linspace(1,366,366);
 cosineRain = @(t) rf + rf*cos(2*pi*t/366); % [mm/day] period of 366 days
-%figure
-%fplot(cosineRain,[0 366])
+figure
+fplot(cosineRain,[0 366])
 
 %% Fourier Calculation
 % For average rainfall vector
