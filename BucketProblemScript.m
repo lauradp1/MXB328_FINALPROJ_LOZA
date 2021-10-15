@@ -77,7 +77,7 @@ nodes.zNodes = zNodes;
 
 % Define time range
 yr = 366;
-t = linspace(0,2*yr,2*yr);
+t = linspace(0,2*yr,2*yr*2);
 dt = t(2)-t(1);
 
 % Collate discretisation constants
