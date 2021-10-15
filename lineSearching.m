@@ -23,7 +23,7 @@ norm_ls = norm(F_k,2);
 while norm_ls >= (1 - dev*lambda)*norm_Fk
     g0 = norm_Fk^2;
     glambda = norm_ls^2;
-    lambda_new = g0*lambda^2/(glambda + (2*lambda - 1)*g0);
+    lambda_new = g0*lambda^2/(glambda + (2*lambda - 1)*g0); 
     
     if lambda_new < 0.1*lambda
         lambda = 0.1*lambda;
@@ -44,4 +44,5 @@ while norm_ls >= (1 - dev*lambda)*norm_Fk
 end
 
 end
+
 

@@ -82,7 +82,7 @@ nodes.xNodes = xNodes;
 nodes.zNodes = zNodes;
 
 % Define time range
-t = linspace(0,100,100);
+t = linspace(0,100,400);
 dt = t(2)-t(1);
 
 % Collate discretisation constants
@@ -101,13 +101,14 @@ optionsNewton.maxiters = 100;
 optionsNewton.newtonStepMethod = 'backslash'; % GMRES, backslash
 
 % Collate Line Searching constants
-optionsLineSearching.dev = 1e-4;
+optionsLineSearching.dev = 1e-6;
 
 % Collate GMRES constants
-optionsGMRES.atol = 1e-8;
-optionsGMRES.rtol = 1e-8;
-optionsGMRES.maxiters = 50;
+optionsGMRES.atol = 1e-6;
+optionsGMRES.rtol = 1e-6;
+optionsGMRES.maxiters = 100;
 optionsGMRES.precond = 'Jacobi'; % Jacobi or Gauss-Seidel
+optionsGMRES.pretype = 'right';
 
 % Collate Jacobian constants
 optionsJacobian.Nx = Nx;
@@ -147,21 +148,21 @@ for t_n = 2:length(t)
     % Plot the previous time solution and store the values as vector
     % heads
     solutionPlot(1) = subplot(2,3,1);
-    contourf(xNodes,zNodes,h_solved(:,:,t_n-1));
+    surf(xNodes,zNodes,h_solved(:,:,t_n-1));
     view(2)
     colormap(solutionPlot(1),flipud(autumn))
     shading interp;
     colorbar
     % water content
     solutionPlot(2) = subplot(2,3,2);
-    contourf(xNodes,zNodes,psi_solved(:,:,t_n-1));
+    surf(xNodes,zNodes,psi_solved(:,:,t_n-1));
     view(2)
     colormap(solutionPlot(2),flipud(winter))
     shading interp;
     colorbar
     % saturation
     solutionPlot(3) = subplot(2,3,3);
-    contourf(xNodes,zNodes,S_solved(:,:,t_n-1));
+    surf(xNodes,zNodes,S_solved(:,:,t_n-1));
     view(2)
     colormap(solutionPlot(3),cool)
     shading interp;
