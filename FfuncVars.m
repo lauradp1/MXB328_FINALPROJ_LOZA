@@ -1,4 +1,4 @@
-function [Psi,flux,Q] = FfuncVars(h,nodes,k,psi,Q_p,K_vals,quadMats,DVs,deltas,Deltas,discretisationConsts)
+function [Psi,flux,Q,outflow] = FfuncVars(h,nodes,k,psi,Q_p,K_vals,quadMats,DVs,deltas,Deltas,discretisationConsts)
 %FFUNCVARS Computes Psi, flux and Q vectors for use with Ffunc
 % Inputs:
 %   h: Nx*Nz column vector of solution heads
@@ -126,7 +126,7 @@ q_s = k_s .* K_s .* (H - H_s) ./ delta_s;
 % Form Psi and calculate averages for q_rain toggle
 psi_h = psi(h)';
 Psi = sum((psi_h(quadMats_p).*DV),2) ./ Delta_xz;
-Psi_avg = sum(Psi .* Delta_xz)/(L1*L2);
+% Psi_avg = sum(Psi .* Delta_xz)/(L1*L2);
 
 % Apply boundary conditions
 q_e(isnan(q_e)) = 0;
@@ -140,6 +140,9 @@ q_s(isnan(q_s)) = 0;
 flux = (q_e + q_w + q_n + q_s) ./ (Delta_xz);
 % Q = ((Psi./Psi_sat) > 0.5) .* Q_p(q_rain);
 Q = (evapotranspiration) .* Q_p(q_rain);
+
+% Return outflow through creek
+outflow = q_w(3<=z & z<=5);
 
 end
 
