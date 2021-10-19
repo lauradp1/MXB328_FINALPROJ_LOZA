@@ -308,6 +308,8 @@ solution.avgSats = avgSatsMeasured;
 solution.h = h_solved;
 solution.psi = psi_solved;
 solution.S = S_solved;
+solution.outflows = outflows;
+solution.constants = discretisationConsts;
 save('bs_rc_s90.mat', 'solution');
 % to load: load('bs_rc_s90.mat')
 
