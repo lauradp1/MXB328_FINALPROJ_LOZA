@@ -46,9 +46,8 @@ rf = r_f;
 syms t
 %t = linspace(1,366,366);
 cosineRain = @(t) rf + rf*cos(2*pi*t/366); % [mm/day] period of 366 days
-figure
-fplot(cosineRain,[0 366])
-
+% figure
+% fplot(cosineRain,[0 366])
 %% Fourier Calculation
 % For average rainfall vector
 t = linspace(1,366,366);
@@ -57,8 +56,8 @@ k = average;
 [a0, an, bn, s_approx, T] = trigFS(k', t, N);
 below_0 = s_approx<0;
 s_approx(below_0) =0;
-figure
-plot(t, s_approx) %0.5, 0.6 
+% figure
+% plot(t, s_approx) %0.5, 0.6 
 %% Average Plot with Fourier Approximation
 t = linspace(1,366,366);
 figure;
@@ -74,8 +73,12 @@ lgd.Interpreter = 'LaTeX';
 lgd.FontSize = 16;
 %% Function 
 %s = @(t) a0/2 + sum(an*cos(n*t) + bn*sin(n*t))
-syms n 
-s = @(t) a0/2 + symsym(an*cos(n*t) + bn*sin(n*t),1,inf);
+%s = @(t,n) a0/2 + symsym(an*cos(n*t) + bn*sin(n*t),1,inf);
+fourierRain = @(t) a0 + sum(an(1:N) .*cos(2*pi*1/T.*(1:N).*t) + bn(1:N).*sin(2*pi*1/T.*(1:N).*t));
+% figure
+% fplot(fun)
+% xlim([0 366])
+% ylim([0 14])
 %% 2012 Data
 % For 2012 rainfall vector
 t = linspace(1,366,366);
