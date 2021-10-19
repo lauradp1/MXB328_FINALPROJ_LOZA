@@ -52,7 +52,7 @@ resnormp = zeros(maxiters,1);
 resnormp(1) = beta;
 m =1;
 converged = false;
-while resnormp(m) > rtol && m<maxiters
+while resnormp(m) > rtol*resnormp(1) && m<maxiters
     v = U\(L\(P*V(:,m)));
     V(:,m+1) = A*v;
 % for m = 1:maxiters  
@@ -69,14 +69,24 @@ while resnormp(m) > rtol && m<maxiters
     %^this is all the arnoldi sequence
     if H(m+1,m) < 10^-13 %almost zero
         RHS = [beta;zeros(m-1, 1)];
-        ym = H(1:m,1:m)\[beta;zeros(m-1, 1)];
+        [U2,S,K] = svd(H(1:m,1:m));
+        S = diag(S);
+        invS = 1./S;
+        invS = diag(invS);
+        ym = K*invS*U2'*[beta;zeros(m-1, 1)];
+        %ym = H(1:m,1:m)\[beta;zeros(m-1, 1)];
         resnormp(m+1) = norm(RHS-H(1:m,1:m)*ym);
         m = m+1;
         break;
     else
         V(:,m+1) = V(:,m+1)/H(m+1,m);
         RHS = [beta;zeros(m, 1)];
-        ym = H(1:m+1,1:m)\[beta;zeros(m, 1)];
+        [U2,S,K] = svd(H(1:m+1,1:m),'econ');
+        S = diag(S);
+        invS = 1./S;
+        invS = diag(invS);
+        ym = K*invS*U2'*[beta;zeros(m, 1)];
+        %ym = H(1:m+1,1:m)\[beta;zeros(m, 1)];
         resnormp(m+1) = norm(RHS-H(1:m+1,1:m)*ym);
     end
     m = m+1;
