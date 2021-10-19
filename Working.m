@@ -1,4 +1,4 @@
-clear; close all; clc;
+clearvars -except cosineRain; close all; clc;
 % profile on;
 % Define material rectangle limits/bounds (x1,x2;z1,z2)
 alluvium = [0,5;0,1]; alluvium(:,:,2) = [0,10;1,2]; alluvium(:,:,3) = [0,15;2,10];
@@ -105,7 +105,7 @@ optionsNewton.m = 1;
 optionsNewton.atol = 1e-6;
 optionsNewton.rtol = 1e-6;
 optionsNewton.maxiters = 30;
-optionsNewton.newtonStepMethod = 'GMRES'; % GMRES, backslash
+optionsNewton.newtonStepMethod = 'backslash'; % GMRES, backslash
 
 % Collate Line Searching constants
 optionsLineSearching.dev = 1e-6;
@@ -154,6 +154,7 @@ S_h_n = S(h_n)';
 S_h_n = sum((S_h_n(quadMats_p).*DVs.DV),2) ./ Deltas.xz;
 S_solved = reshape(S_h_n,[Nz,Nx]);
 avgSatsMeasured = sum(psi_h_n .* Deltas.xz)/(L1*L2);
+outflows = zeros(sum(3<=zNodes & zNodes<=5),1);
 
 %%
 
@@ -186,11 +187,11 @@ title("average water content at time " + num2str(t_vals(end)) + " (dt = " + num2
 drawnow;
 
 while t + dt < t_max
-    % t = t + dt;
     converged = false;
     % keep trying until a dt results in a successful convergence
     while ~converged
         discretisationConsts.dt = dt;
+        discretisationConsts.q_rain = cosineRain(t + dt);
         discretisationConsts.rainfall = avgSatsMeasured(end)/Psi_avg_max < 0.95;
         discretisationConsts.evapotranspiration = psi_h_n./Psi_sat > 0.5;
         % Form F for current time-step
@@ -230,6 +231,8 @@ while t + dt < t_max
     S_h_n = S(h_n)';
     S_h_n = sum((S_h_n(quadMats_p).*DVs.DV),2) ./ Deltas.xz;
     S_solved(:,:,end+1) = reshape(S_h_n,[Nz,Nx]);
+    % save outflow values
+    [~,outflows(:,length(t_vals)-1)] = Ffunc(h_n,h_n,k,psi,Q,nodes,meshConfig,discretisationConsts);
     
     % Plot solutions at current time-step
 %     solutionPlot(1) = subplot(2,3,1);
