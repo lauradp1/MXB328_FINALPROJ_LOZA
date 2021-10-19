@@ -43,7 +43,13 @@ Nx = length(x); Nz = length(z);
 Kc = discretisationConsts.Kc;
 Hc = discretisationConsts.Hc;
 Xc = discretisationConsts.Xc;
+L1 = discretisationConsts.L1;
+L2 = discretisationConsts.L2;
 q_rain = discretisationConsts.q_rain;
+rainfall = discretisationConsts.rainfall;
+evapotranspiration = discretisationConsts.evapotranspiration;
+% Psi_avg_max = discretisationConsts.Psi_avg_max;
+Psi_sat = discretisationConsts.Psi_sat;
 
 % Extract K vectors
 K_e = K_vals.east;
@@ -117,22 +123,23 @@ q_w = k_w .* K_w .* (H - H_w) ./ delta_w;
 q_n = -k_n .* K_n .* (H_n - H) ./ delta_n;
 q_s = k_s .* K_s .* (H - H_s) ./ delta_s;
 
+% Form Psi and calculate averages for q_rain toggle
+psi_h = psi(h)';
+Psi = sum((psi_h(quadMats_p).*DV),2) ./ Delta_xz;
+Psi_avg = sum(Psi .* Delta_xz)/(L1*L2);
+
 % Apply boundary conditions
 q_e(isnan(q_e)) = 0;
 q_w(isnan(q_w)) = (3<=z & z<=5 & H(1:Nz)>Hc) .* (Kc*(Hc - H(1:Nz))/Xc) ...
                     .* Delta_creek(1:Nz);
-q_n(isnan(q_n)) = -q_rain * Delta_x(isnan(q_n));
+% q_n(isnan(q_n)) = (Psi_avg/Psi_avg_max < 0.95) * -q_rain * Delta_x(isnan(q_n));
+q_n(isnan(q_n)) = (rainfall) * -q_rain * Delta_x(isnan(q_n));
 q_s(isnan(q_s)) = 0;
 
-% Form flux, Psi and Q
+% Form flux and Q
 flux = (q_e + q_w + q_n + q_s) ./ (Delta_xz);
-
-psi_h = psi(h)';
-Psi = sum((psi_h(quadMats_p).*DV),2) ./ Delta_xz;
-
-psi_sat = psi(zeros(Nx*Nz,1))';
-Psi_sat = sum((psi_sat(quadMats_p).*DV),2) ./ Delta_xz;
-Q = ((Psi./Psi_sat) > 0.5) .* Q_p(q_rain);
+% Q = ((Psi./Psi_sat) > 0.5) .* Q_p(q_rain);
+Q = (evapotranspiration) .* Q_p(q_rain);
 
 end
 

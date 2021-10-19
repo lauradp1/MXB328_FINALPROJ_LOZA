@@ -82,7 +82,12 @@ dt = t(2)-t(1);
 % Collate discretisation constants
 discretisationConsts.dt = dt;
 discretisationConsts.theta = 1;
-discretisationConsts.q_rain = 0.005; % just a random constant choice
+discretisationConsts.q_rain = 0.0042; % just a random constant choice
+psi_sat = psi(zeros(Nx*Nz,1))';
+Psi_sat = sum((psi_sat(quadMats_p).*DVs.DV),2) ./ Deltas.xz;
+discretisationConsts.Psi_sat = Psi_sat;
+Psi_avg_max = sum(Psi_sat .* Deltas.xz)/(L1*L2);
+discretisationConsts.Psi_avg_max = Psi_avg_max;
 
 % Collate Newton method constants
 optionsNewton.m = 1;

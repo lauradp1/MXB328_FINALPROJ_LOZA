@@ -39,7 +39,7 @@ h = zeros(length(h_n),1);
 
 % Perform Newton iterations until convergence
 for k_newton = 1:maxiters
-    k_newton
+%     k_newton
     % Generate Jacobian every m iterations
     if ~mod(k_newton-1,m)
         J = @(h) jacobian(h,F,F_k,optionsJacobian);
@@ -70,7 +70,7 @@ for k_newton = 1:maxiters
         % Accept Newton iteration
         h_k = h_k + lambda*delta_h;
         F_k = F(h_k);
-        norm_Fk = norm(F_k,2)
+        norm_Fk = norm(F_k,2);
     end
     
     % Check for convergence

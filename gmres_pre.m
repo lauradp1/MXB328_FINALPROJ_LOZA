@@ -13,11 +13,11 @@ function [x,m,converged] = gmres_pre(A,b,x0,options)
 %   m: number of iterations taken (positive integer)
 %   converged: true if stopping criterion satisfied and false otherwise (logical scalar)
 
-atol = options.atol;
+% atol = options.atol;
 rtol = options.rtol;
 maxiters = options.maxiters;
 precond = options.precond;
-pretype = options.pretype;
+% pretype = options.pretype;
 
 % Initialise
 N  = size(A,1);

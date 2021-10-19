@@ -7,6 +7,8 @@ z = nodes.zNodes;
 Nx = length(x); Nz = length(z);
 
 q_rain = discretisationConsts.q_rain;
+Psi_avg_max = discretisationConsts.Psi_avg_max;
+Psi_sat = discretisationConsts.Psi_sat;
 
 K_e = K_vals.east;
 K_w = K_vals.west;
@@ -78,7 +80,7 @@ q_s = k_s .* K_s .* (H - H_s) ./ delta_s;
 % Apply boundary conditions
 q_e(isnan(q_e)) = 0;
 q_w(isnan(q_w)) = 0;
-q_n(isnan(q_n)) = -q_rain * Delta_x(isnan(q_n));
+q_n(isnan(q_n)) = (Psi_sat/Psi_avg_max < 0.95) * -q_rain * Delta_x(isnan(q_n));
 q_s(isnan(q_s)) = 0;
 
 % Form G, Q and Psi
