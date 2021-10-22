@@ -268,7 +268,7 @@ end
 
 
 %% Show stuff to see where sim got up to
-figure
+
 psi_sat = psi(zeros(Nx*Nz,1))';
 Psi_sat = sum((psi_sat(quadMats_p).*DVs.DV),2) ./ Deltas.xz;
 Psi_sat_avg = sum(Psi_sat .* Deltas.xz)/(L1*L2);
@@ -293,7 +293,7 @@ title('Water Content','Interpreter','Latex')
 solutionPlot(3) = subplot(2,3,3);
 contourf(xNodes,zNodes,S_solved(:,:,end));
 view(2)
-colormap(solutionPlot(3),flipud(parula))
+colormap(solutionPlot(3),cool)
 shading interp;
 colorbar
 title('Saturation','Interpreter','Latex')
@@ -306,7 +306,8 @@ xlabel('Time (days)','Interpreter','Latex');
 ylabel('$\psi_(avg)$','Interpreter','Latex')
 drawnow;
 
-%% Save solution to workspace
+%%
+
 solution.t = t_vals;
 solution.avgSats = avgSatsMeasured;
 solution.h = h_solved;
@@ -315,15 +316,16 @@ solution.S = S_solved;
 solution.outflows = outflows;
 solution.constants = discretisationConsts;
 save('bs_rc_s90.mat', 'solution');
+% to load: load('bs_rc_s90.mat')
 
 %% Load
 load('bs_rc_s90.mat')
-t_vals = solution.t;
-avgSatsMeasured = solution.avgSats;
-h_solved = solution.h;
-psi_solved = solution.psi;
-S_solved = solution.S;
-outflows = solution.outflows;
-discretisationConsts = solution.constants;
+solution.t = t_vals;
+solution.avgSats = avgSatsMeasured;
+solution.h = h_solved;
+solution.psi = psi_solved;
+solution.S = S_solved;
+solution.outflows = outflows;
+solution.constants = discretisationConsts;
 
 
