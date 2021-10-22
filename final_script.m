@@ -2,7 +2,7 @@ clear; clc; close all
 %% Import Data
 rainfall = readtable('MackayAlert.csv');
 %% Climate Modelling Plots
-[cosineRain, fourierRain, r_f, average] = RainfallModelling(rainfall);
+[cosineRain, fourierRain, r_f, average, fourierFlood] = RainfallModelling(rainfall);
 % Average Rainfall Plot
 figure;
 plot(average*10^(-3),'LineWidth',2)
@@ -21,7 +21,7 @@ t = linspace(1,366,366);
 figure;
 plot(t,average,'LineWidth',2)
 hold on
-fplot(fourierRain, [0 366],'r--','LineWidth',2)
+fplot(10^-3*fourierRain, [0 366],'r--','LineWidth',2)
 title('Rainfall Averaged from 2012 to 2020','FontSize',24,'Interpreter','LaTeX')
 xlabel('Time (days)','FontSize',20,'Interpreter','LaTeX')
 xlim([0 366])

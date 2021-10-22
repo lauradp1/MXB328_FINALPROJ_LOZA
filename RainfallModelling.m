@@ -46,13 +46,14 @@ fourierRain = @(t) a0 + sum(an(1:N) .*cos(2*pi*1/T.*(1:N).*t) + bn(1:N).*sin(2*p
 % Year of Flooding
 %% For 2011 rainfall vector
 t = linspace(1,366,366);
-N = 50;
+N = 100;
 k = RainfallModel(:,1);
-[a0, an, bn, s_approx, T] = trigFS(k', t, N);
-below_0 = s_approx<0;
-s_approx(below_0) =0;
-figure
-plot(t, s_approx)
+[a0_flood, an_flood, bn_flood, s_flood, T] = trigFS(k', t, N);
+fourierFlood = @(t) a0_flood + sum(an_flood(1:N) .*cos(2*pi*1/T.*(1:N).*t) + bn_flood(1:N).*sin(2*pi*1/T.*(1:N).*t));
+% below_0 = s_flood<0;
+% s_flood(below_0) =0;
+% figure
+% plot(t, s_flood)
 % Flood -> Probability
 % Rain = RainfallModel(:,1) ~= 0;
 % rr = strfind(Rain', [1 1]);
