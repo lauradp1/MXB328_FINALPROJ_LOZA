@@ -1,4 +1,4 @@
-clearvars -except cosineRain; close all; clc;
+%clearvars -except cosineRain; close all; clc;
 % profile on;
 % Define material rectangle limits/bounds (x1,x2;z1,z2)
 alluvium = [0,5;0,1]; alluvium(:,:,2) = [0,10;1,2]; alluvium(:,:,3) = [0,15;2,10];
@@ -280,6 +280,7 @@ view(2)
 colormap(solutionPlot(1),flipud(autumn))
 shading interp;
 colorbar
+title('Pressure Heads','Interpreter','Latex')
 % water content
 solutionPlot(2) = subplot(2,3,2);
 contourf(xNodes,zNodes,psi_solved(:,:,end));
@@ -287,6 +288,7 @@ view(2)
 colormap(solutionPlot(2),flipud(winter))
 shading interp;
 colorbar
+title('Water Content','Interpreter','Latex')
 % saturation
 solutionPlot(3) = subplot(2,3,3);
 contourf(xNodes,zNodes,S_solved(:,:,end));
@@ -294,11 +296,14 @@ view(2)
 colormap(solutionPlot(3),cool)
 shading interp;
 colorbar
+title('Saturation','Interpreter','Latex')
 % average water content (moisture)
 solutionPlot(4) = subplot(2,3,[4,5,6]);
 plot(t_vals,avgSatsMeasured,'b');
 ylim([0,0.5])
-title("average water content at time " + num2str(t_vals(end)) + " (dt = " + num2str(dt) + ")");
+title('Average Water Content','Interpreter','Latex');
+xlabel('Time (days)','Interpreter','Latex');
+ylabel('$\psi_(avg)$','Interpreter','Latex')
 drawnow;
 
 %%
