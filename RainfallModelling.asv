@@ -20,7 +20,7 @@ rainfallTemp = rainfallData(:,[2:10]);
 T = rainfallTemp';
 average = mean(T,'omitnan')';
 averageDaily = mean(average);
-r_f = averageDaily*10^(-3);
+r_f = averageDaily;
 % Replacing Nans with Averages
 RainfallModel = rainfallData;
 for j = 1:length(years)
@@ -46,8 +46,7 @@ fourierRain = @(t) a0 + sum(an(1:N) .*cos(2*pi*1/T.*(1:N).*t) + bn(1:N).*sin(2*p
 % Year of Flooding
 %% For 2011 rainfall vector
 r_flood = mean(RainfallModel(:,1));
-cosineRain = @(t) rf + rf*cos(2*pi*t/366); % [mm/day] period of 366 days
-
+cosineFlood = @(t) r_flood + r_flood*cos(2*pi*t/366); % [mm/day] period of 366 days
 %% Fourier 
 t = linspace(1,366,366);
 N = 100;
