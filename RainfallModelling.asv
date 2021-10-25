@@ -45,8 +45,9 @@ fourierRain = @(t) a0 + sum(an(1:N) .*cos(2*pi*1/T.*(1:N).*t) + bn(1:N).*sin(2*p
 % ylim([0 14])
 % Year of Flooding
 %% For 2011 rainfall vector
-r_flood = mean(RainfallModel(:,1))*10^(-3);
-cosineFlood = @(t) r_flood + r_flood*cos(2*pi*t/366); % [mm/day] period of 366 days
+r_flood = mean(RainfallModel(:,1));
+cosineRain = @(t) rf + rf*cos(2*pi*t/366); % [mm/day] period of 366 days
+
 %% Fourier 
 t = linspace(1,366,366);
 N = 100;
