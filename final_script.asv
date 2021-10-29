@@ -6,41 +6,31 @@ rainfall = readtable('MackayAlert.csv');
 %% Initial Yearly Rainfall Plot
 figure;
 t = linspace(1,366,366);
-plot(t,RainfallModel(:,1),'LineWidth',1.5)
+plot(t,RainfallModel(:,1))
 hold on
-plot(t,RainfallModel(:,2),'LineWidth',1.5)
+plot(t,RainfallModel(:,2))
 hold on
-plot(t,RainfallModel(:,3),'LineWidth',1.5)
+plot(t,RainfallModel(:,3))
 hold on
-plot(t,RainfallModel(:,4),'LineWidth',1.5)
+plot(t,RainfallModel(:,4))
 hold on
-plot(t,RainfallModel(:,5),'LineWidth',1.5)
+plot(t,RainfallModel(:,5))
 hold on
-plot(t,RainfallModel(:,6),'LineWidth',1.5)
+plot(t,RainfallModel(:,6))
 hold on
-plot(t,RainfallModel(:,7),'LineWidth',1.5)
+plot(t,RainfallModel(:,7))
 hold on
-plot(t,RainfallModel(:,8),'LineWidth',1.5)
+plot(t,RainfallModel(:,8))
 hold on
-plot(t,RainfallModel(:,9),'LineWidth',1.5)
+plot(t,RainfallModel(:,9))
 hold on
-plot(t,RainfallModel(:,10),'LineWidth',1.5)
+plot(t,RainfallModel(:,10))
 xlim([0 366])
-title('Rainfall from 2011 to 2020 Compared','FontSize',24,'Interpreter','LaTeX')
-xlabel('Time (days)','FontSize',20,'Interpreter','LaTeX')
-ylabel('Rainfall (mm)','FontSize',20,'Interpreter','LaTeX')
-lgd = legend('2011','2012','2013','2014','2015','2016','2017','2018','2019','2020');
-lgd.FontSize = 16;
-lgd.Interpreter = 'latex';
-lgd.Location = 'eastoutside';
-%% How do I make this a loop ???
-% t = linspace(1,366,366);
-% figure
-% for i = 1:length(years)
-%     plot(t,RainfallModel(:,i))
-%     hold on
-% end
-% xlim([0 366])
+legend('2011','2012','2013','2014','2015','2016','2017','2018','2019','2020')
+%%
+figure
+for i = 1:length(years)
+    
 %% Average Rainfall Plot
 figure;
 plot(average,'b','LineWidth',2)

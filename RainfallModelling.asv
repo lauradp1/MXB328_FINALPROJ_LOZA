@@ -44,19 +44,15 @@ t = linspace(1,366,366);
 N = 50;
 k = average;
 [a0, an, bn, FourierAverage, T] = trigFS(k', t, N);
-below_0 = FourierAverage < 0; 
-FourierAverage(below_0) = 0;
 fourierRain = @(t) a0 + sum(an(1:N) .*cos(2*pi*1/T.*(1:N).*t) + bn(1:N).*sin(2*pi*1/T.*(1:N).*t));
 %% Flood Cosine Approximation
 r_flood = mean(RainfallModel(:,1));
 cosineFlood = @(t) r_flood + r_flood*cos(2*pi*t/366); % [mm/day] period of 366 days
 %% Flood Fourier Approximation
 t = linspace(1,366,366);
-N = 50;
+N = 100;
 k = RainfallModel(:,1);
 [a0_flood, an_flood, bn_flood, FourierFlood, T] = trigFS(k', t, N);
-below_0 = FourierFlood < 0; 
-FourierFlood(below_0) = 0;
 fourierFlood = @(t) a0_flood + sum(an_flood(1:N) .*cos(2*pi*1/T.*(1:N).*t) + bn_flood(1:N).*sin(2*pi*1/T.*(1:N).*t));
 %% Flood Data Probability
 Rain = RainfallModel(:,1) ~= 0;
