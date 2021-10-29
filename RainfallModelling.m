@@ -1,4 +1,4 @@
-function [cosineRain, fourierRain, r_f, average, fourierFlood, cosineFlood] = RainfallModelling(rainfall)
+function [cosineRain, fourierRain, r_f, average, fourierFlood, cosineFlood, RainfallModel] = RainfallModelling(rainfall)
 % Remove unneccesary columns and convert to matrix
 rainfall(:,[1,2,7,8]) = [];
 rainfall = table2array(rainfall);

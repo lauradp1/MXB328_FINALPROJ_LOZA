@@ -2,7 +2,7 @@ clear; clc; close all
 %% Import Data
 rainfall = readtable('MackayAlert.csv');
 %% Climate Modelling Plots
-[cosineRain, fourierRain, r_f, average, fourierFlood, cosineFlood] = RainfallModelling(rainfall);
+[cosineRain, fourierRain, r_f, average, fourierFlood, cosineFlood, RainfallModel] = RainfallModelling(rainfall);
 %% Average Rainfall Plot
 figure;
 plot(average,'LineWidth',2)
@@ -36,4 +36,12 @@ lgd.FontSize = 16;
 
 %% Cosine Flood
 figure
-fplot(cosineFlood, [0 366],'r--','LineWidth',2)
+plot(t, RainfallModel(:,1),'b','LineWidth',2)
+hold on
+fplot(cosineFlood, [0 366],'r--','LineWidth',2) 
+title('Cosine Approximation Compared with Flood Year Data','FontSize',24,'Interpreter','LaTeX')
+xlabel('Time (days)','FontSize',20,'Interpreter','LaTeX')
+xlim([0 366])
+ylabel('Rainfall (mm)','FontSize',20,'Interpreter','LaTeX')
+lgd = legend('2011 Data','Cosine Approximation');
+lgd.Interpreter = 'latex';
