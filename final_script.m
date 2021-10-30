@@ -2,7 +2,7 @@ clear; clc; close all
 %% Import Data
 rainfall = readtable('MackayAlert.csv');
 %% Climate Modelling Plots
-[cosineRain, fourierRain, r_f, average, fourierFlood, cosineFlood, RainfallModel, steadystateFlood, steadystateAveraged, FourierAverage, FourierFlood] = RainfallModelling(rainfall);
+[years, cosineRain, fourierRain, r_f, average, fourierFlood, cosineFlood, RainfallModel, steadystateFlood, steadystateAveraged, FourierAverage, FourierFlood] = RainfallModelling(rainfall);
 %% Initial Yearly Rainfall Plot
 figure;
 t = linspace(1,366,366);
@@ -90,6 +90,6 @@ title('Fourier Approximation Compared with Flood Year Data','FontSize',24,'Inter
 xlabel('Time (days)','FontSize',20,'Interpreter','LaTeX')
 xlim([0 366])
 ylabel('Rainfall (mm)','FontSize',20,'Interpreter','LaTeX')
-lgd = legend('2011 Data','Cosine Approximation');
+lgd = legend('2011 Data','Fourier Approximation');
 lgd.Interpreter = 'latex';
 lgd.FontSize = 16;

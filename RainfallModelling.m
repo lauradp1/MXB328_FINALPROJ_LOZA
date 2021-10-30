@@ -1,4 +1,4 @@
-function [cosineRain, fourierRain, r_f, average, fourierFlood, cosineFlood, RainfallModel, steadystateFlood, steadystateAveraged, FourierAverage, FourierFlood] = RainfallModelling(rainfall)
+function [years, cosineRain, fourierRain, r_f, average, fourierFlood, cosineFlood, RainfallModel, steadystateFlood, steadystateAveraged, FourierAverage, FourierFlood] = RainfallModelling(rainfall)
 % Climate Modelling Function 
 % Takes an input of rainfall which is the data gathered from BOM
 % Outputs:
